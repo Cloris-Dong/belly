@@ -14,8 +14,8 @@ struct ShoppingListView: View {
     
     @FetchRequest(
         sortDescriptors: [
-            NSSortDescriptor(keyPath: \GroceryItem.isPurchased, ascending: true),
-            NSSortDescriptor(keyPath: \GroceryItem.dateAdded, ascending: false)
+            NSSortDescriptor(key: "isPurchased", ascending: true),
+            NSSortDescriptor(key: "dateAdded", ascending: false)
         ],
         animation: .default)
     private var groceryItems: FetchedResults<GroceryItem>

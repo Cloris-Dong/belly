@@ -13,7 +13,7 @@ struct FridgeView: View {
     @StateObject private var viewModel = FridgeViewModel()
     
     @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \FoodItem.expirationDate, ascending: true)],
+        sortDescriptors: [NSSortDescriptor(key: "expirationDate", ascending: true)],
         animation: .default)
     private var foodItems: FetchedResults<FoodItem>
     

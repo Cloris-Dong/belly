@@ -65,6 +65,13 @@ public final class PersistenceController: ObservableObject {
     /// Initialize the persistence controller
     /// - Parameter inMemory: If true, uses an in-memory store for testing/previews
     public init(inMemory: Bool = false) {
+        // Debug: Check if model exists in bundle
+        if let modelURL = Bundle.main.url(forResource: "BellyDataModel", withExtension: "momd") {
+            logger.info("✅ Core Data model found at: \(modelURL)")
+        } else {
+            logger.error("❌ Core Data model NOT found in bundle - check if .xcdatamodeld is added to project")
+        }
+        
         container = NSPersistentContainer(name: "BellyDataModel")
         
         if inMemory {

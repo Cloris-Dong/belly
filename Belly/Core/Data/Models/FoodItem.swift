@@ -135,7 +135,7 @@ extension FoodItem {
             threeDaysFromNow as NSDate,
             now as NSDate
         )
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \FoodItem.expirationDate, ascending: true)]
+        request.sortDescriptors = [NSSortDescriptor(key: "expirationDate", ascending: true)]
         return request
     }
     
@@ -148,7 +148,7 @@ extension FoodItem {
             format: "expirationDate < %@ AND dateRemoved == nil",
             now as NSDate
         )
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \FoodItem.expirationDate, ascending: true)]
+        request.sortDescriptors = [NSSortDescriptor(key: "expirationDate", ascending: true)]
         return request
     }
     
