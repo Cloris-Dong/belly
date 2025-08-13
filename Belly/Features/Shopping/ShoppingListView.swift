@@ -407,10 +407,10 @@ class ShoppingListViewModel: ObservableObject {
 
 #Preview {
     ShoppingListView()
-        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environment(\.managedObjectContext, PreviewHelper.createPreviewContext())
 }
 
 #Preview("Add Item") {
     AddGroceryItemView()
-        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environment(\.managedObjectContext, PreviewHelper.createPreviewContext())
 }

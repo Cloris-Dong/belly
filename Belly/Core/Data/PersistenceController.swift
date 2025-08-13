@@ -21,8 +21,20 @@ public final class PersistenceController: ObservableObject {
     public static let preview: PersistenceController = {
         let controller = PersistenceController(inMemory: true)
         
-        // Add sample data for previews
-        controller.createSampleData()
+        // Wait for container to load, then add sample data
+        let dispatchGroup = DispatchGroup()
+        dispatchGroup.enter()
+        
+        controller.container.loadPersistentStores { _, error in
+            if error == nil {
+                // Only create sample data if store loaded successfully
+                controller.createSampleDataForPreview()
+            }
+            dispatchGroup.leave()
+        }
+        
+        // Wait for loading to complete (with timeout for safety)
+        _ = dispatchGroup.wait(timeout: .now() + 2.0)
         
         return controller
     }()
@@ -56,12 +68,25 @@ public final class PersistenceController: ObservableObject {
         container = NSPersistentContainer(name: "BellyDataModel")
         
         if inMemory {
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            // Safe unwrapping for preview context
+            if let storeDescription = container.persistentStoreDescriptions.first {
+                storeDescription.url = URL(fileURLWithPath: "/dev/null")
+            } else {
+                // Create a default in-memory store description if none exists
+                let description = NSPersistentStoreDescription()
+                description.url = URL(fileURLWithPath: "/dev/null")
+                description.type = NSInMemoryStoreType
+                container.persistentStoreDescriptions = [description]
+            }
         }
         
         configureContainer()
-        loadPersistentStores()
-        configureViewContext()
+        
+        // For non-preview contexts, load stores immediately
+        if !inMemory {
+            loadPersistentStores()
+            configureViewContext()
+        }
     }
     
     // MARK: - Configuration
@@ -76,9 +101,11 @@ public final class PersistenceController: ObservableObject {
         description.shouldInferMappingModelAutomatically = true
         description.shouldMigrateStoreAutomatically = true
         
-        // Enable persistent history tracking
-        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        // Only enable persistent history tracking for non-in-memory stores
+        if description.type != NSInMemoryStoreType {
+            description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+            description.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        }
         
         logger.info("Configured persistent store description")
     }
@@ -259,6 +286,26 @@ extension PersistenceController {
         logger.info("Created sample data")
     }
     
+    /// Create sample data specifically for SwiftUI previews
+    public func createSampleDataForPreview() {
+        let context = viewContext
+        
+        // Configure context for preview use
+        configureViewContext()
+        
+        // Create a minimal set of sample data for previews
+        createPreviewFoodItems(in: context)
+        createPreviewGroceryItems(in: context)
+        
+        // Save synchronously for preview
+        do {
+            try context.save()
+            logger.info("Created preview sample data")
+        } catch {
+            logger.error("Failed to save preview data: \(error.localizedDescription)")
+        }
+    }
+    
     private func createSampleFoodItems(in context: NSManagedObjectContext) {
         let sampleItems = [
             ("Apples", FoodCategory.fruits, 6.0, FoodUnit.pieces, Calendar.current.date(byAdding: .day, value: 5, to: Date())!, "Refrigerator"),
@@ -301,6 +348,47 @@ extension PersistenceController {
         ]
         
         for (name, category, isPurchased) in sampleItems {
+            _ = GroceryItem.create(
+                in: context,
+                name: name,
+                category: category,
+                isPurchased: isPurchased
+            )
+        }
+    }
+    
+    // MARK: - Preview-Specific Sample Data
+    
+    private func createPreviewFoodItems(in context: NSManagedObjectContext) {
+        // Minimal sample data for previews to avoid performance issues
+        let previewItems = [
+            ("Fresh Apples", FoodCategory.fruits, 4.0, FoodUnit.pieces, Calendar.current.date(byAdding: .day, value: 7, to: Date())!, "Refrigerator"),
+            ("Milk", FoodCategory.dairy, 1.0, FoodUnit.cartons, Calendar.current.date(byAdding: .day, value: 2, to: Date())!, "Refrigerator"),
+            ("Expired Bread", FoodCategory.pantry, 1.0, FoodUnit.packages, Calendar.current.date(byAdding: .day, value: -1, to: Date())!, "Pantry")
+        ]
+        
+        for (name, category, quantity, unit, expirationDate, storage) in previewItems {
+            _ = FoodItem.create(
+                in: context,
+                name: name,
+                category: category,
+                quantity: quantity,
+                unit: unit,
+                expirationDate: expirationDate,
+                storage: storage
+            )
+        }
+    }
+    
+    private func createPreviewGroceryItems(in context: NSManagedObjectContext) {
+        // Minimal grocery items for preview
+        let previewItems = [
+            ("Bananas", FoodCategory.fruits, false),
+            ("Greek Yogurt", FoodCategory.dairy, true),
+            ("Spinach", FoodCategory.vegetables, false)
+        ]
+        
+        for (name, category, isPurchased) in previewItems {
             _ = GroceryItem.create(
                 in: context,
                 name: name,

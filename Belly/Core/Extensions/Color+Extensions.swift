@@ -154,17 +154,23 @@ extension Color {
         })
     }
     
-    /// Slightly transparent version of the color
-    func opacity(_ opacity: Double) -> Color {
-        return self.opacity(opacity)
-    }
-    
-    /// Lighter version of the color
+    /// Lighter version of the color by increasing brightness
     func lighter(by percentage: Double = 0.2) -> Color {
-        return self.opacity(1.0 - percentage)
+        let uiColor = UIColor(self)
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        uiColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+        
+        let newBrightness = min(brightness + (brightness * percentage), 1.0)
+        let newColor = UIColor(hue: hue, saturation: saturation, brightness: newBrightness, alpha: alpha)
+        
+        return Color(newColor)
     }
     
-    /// Darker version of the color
+    /// Darker version of the color by decreasing brightness
     func darker(by percentage: Double = 0.2) -> Color {
         let uiColor = UIColor(self)
         var hue: CGFloat = 0
@@ -178,5 +184,10 @@ extension Color {
         let newColor = UIColor(hue: hue, saturation: saturation, brightness: newBrightness, alpha: alpha)
         
         return Color(newColor)
+    }
+    
+    /// Create a semi-transparent version of the color
+    func withOpacity(_ opacity: Double) -> Color {
+        return self.opacity(opacity)
     }
 }

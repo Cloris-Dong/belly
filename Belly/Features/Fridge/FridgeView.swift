@@ -267,5 +267,5 @@ class FridgeViewModel: ObservableObject {
 
 #Preview {
     FridgeView()
-        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environment(\.managedObjectContext, PreviewHelper.createPreviewContext())
 }

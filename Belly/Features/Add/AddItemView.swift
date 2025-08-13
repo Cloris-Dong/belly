@@ -376,5 +376,5 @@ class AddItemViewModel: ObservableObject {
 
 #Preview {
     AddItemView()
-        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
+        .environment(\.managedObjectContext, PreviewHelper.createPreviewContext())
 }
