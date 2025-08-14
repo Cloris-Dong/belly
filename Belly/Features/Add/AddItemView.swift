@@ -6,375 +6,264 @@
 //
 
 import SwiftUI
-import CoreData
+import UIKit
+import AVFoundation
 
 struct AddItemView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = AddItemViewModel()
-    
-    @State private var selectedAddMethod: AddMethod = .manual
-    @State private var showingCamera = false
-    @State private var showingBarcodeScanner = false
+    @StateObject private var permissionManager = CameraPermissionManager()
     
     var body: some View {
         NavigationView {
-            VStack(spacing: DesignSystem.Spacing.sectionSpacing) {
-                // Header
-                headerView
+            ZStack {
+                // Background
+                Color.appBackground
+                    .ignoresSafeArea()
                 
-                // Add Method Selection
-                addMethodSelector
-                
-                // Main Content
-                mainContent
-                
-                Spacer()
-                
-                // Action Buttons
-                actionButtons
-            }
-            .standardPadding()
-            .background(Color.appBackground)
-            .navigationTitle("Add Item")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.oceanBlue)
-                }
-            }
-            .sheet(isPresented: $showingCamera) {
-                CameraView()
-            }
-            .sheet(isPresented: $showingBarcodeScanner) {
-                BarcodeScannerView()
-            }
-        }
-    }
-    
-    // MARK: - Header View
-    
-    private var headerView: some View {
-        VStack(spacing: DesignSystem.Spacing.md) {
-            Image(systemName: DesignSystem.Icons.camera)
-                .font(.system(size: DesignSystem.Icons.extraLarge))
-                .foregroundColor(.oceanBlue)
-            
-            Text("Add Food to Your Fridge")
-                .font(DesignSystem.Typography.title2)
-                .foregroundColor(.primaryText)
-                .multilineTextAlignment(.center)
-            
-            Text("Choose how you'd like to add your food item")
-                .font(DesignSystem.Typography.body)
-                .foregroundColor(.secondaryText)
-                .multilineTextAlignment(.center)
-        }
-    }
-    
-    // MARK: - Add Method Selector
-    
-    private var addMethodSelector: some View {
-        Picker("Add Method", selection: $selectedAddMethod) {
-            ForEach(AddMethod.allCases, id: \.self) { method in
-                Text(method.title)
-                    .tag(method)
-            }
-        }
-        .pickerStyle(SegmentedPickerStyle())
-    }
-    
-    // MARK: - Main Content
-    
-    private var mainContent: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
-            switch selectedAddMethod {
-            case .camera:
-                cameraContent
-            case .barcode:
-                barcodeContent
-            case .manual:
-                manualContent
-            }
-        }
-    }
-    
-    // MARK: - Camera Content
-    
-    private var cameraContent: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
-            Image(systemName: "camera.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.oceanBlue)
-            
-            Text("Take a Photo")
-                .font(DesignSystem.Typography.headline)
-                .foregroundColor(.primaryText)
-            
-            Text("Snap a picture of your food item and we'll help identify it automatically")
-                .font(DesignSystem.Typography.body)
-                .foregroundColor(.secondaryText)
-                .multilineTextAlignment(.center)
-            
-            Button("Open Camera") {
-                showingCamera = true
-            }
-            .buttonStyle(backgroundColor: .oceanBlue, foregroundColor: .white)
-        }
-        .largePadding()
-        .cardStyle()
-    }
-    
-    // MARK: - Barcode Content
-    
-    private var barcodeContent: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
-            Image(systemName: "barcode.viewfinder")
-                .font(.system(size: 60))
-                .foregroundColor(.oceanBlue)
-            
-            Text("Scan Barcode")
-                .font(DesignSystem.Typography.headline)
-                .foregroundColor(.primaryText)
-            
-            Text("Scan the barcode on your food package to automatically add product information")
-                .font(DesignSystem.Typography.body)
-                .foregroundColor(.secondaryText)
-                .multilineTextAlignment(.center)
-            
-            Button("Open Scanner") {
-                showingBarcodeScanner = true
-            }
-            .buttonStyle(backgroundColor: .oceanBlue, foregroundColor: .white)
-        }
-        .largePadding()
-        .cardStyle()
-    }
-    
-    // MARK: - Manual Content
-    
-    private var manualContent: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
-            Image(systemName: "pencil")
-                .font(.system(size: 60))
-                .foregroundColor(.oceanBlue)
-            
-            Text("Manual Entry")
-                .font(DesignSystem.Typography.headline)
-                .foregroundColor(.primaryText)
-            
-            Text("Enter food details manually with our simple form")
-                .font(DesignSystem.Typography.body)
-                .foregroundColor(.secondaryText)
-                .multilineTextAlignment(.center)
-            
-            // Quick Add Options
-            VStack(spacing: DesignSystem.Spacing.md) {
-                Text("Quick Add")
-                    .font(DesignSystem.Typography.calloutEmphasized)
-                    .foregroundColor(.primaryText)
-                
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: DesignSystem.Spacing.md) {
-                    ForEach(QuickAddItem.samples, id: \.name) { item in
-                        QuickAddButton(item: item) {
-                            viewModel.addQuickItem(item, context: viewContext)
-                            dismiss()
+                VStack(spacing: DesignSystem.Spacing.xl) {
+                    // Header
+                    VStack(spacing: DesignSystem.Spacing.md) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.oceanBlue)
+                        
+                        VStack(spacing: DesignSystem.Spacing.sm) {
+                            Text("Add Items")
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                            
+                            Text("Take a photo to automatically detect food items")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
                         }
                     }
+                    .padding(.top, DesignSystem.Spacing.xxl)
+                    
+                    Spacer()
+                    
+                    // Action buttons
+                    VStack(spacing: DesignSystem.Spacing.lg) {
+                        // Camera button
+                        Button(action: {
+                            checkCameraPermissionAndCapture()
+                        }) {
+                            HStack(spacing: DesignSystem.Spacing.md) {
+                                Image(systemName: "camera.fill")
+                                    .font(.title2)
+                                Text("Take Photo")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, DesignSystem.Spacing.lg)
+                            .background(
+                                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.lg)
+                                    .fill(Color.oceanBlue)
+                            )
+                        }
+                        
+                        // Gallery button
+                        Button(action: { viewModel.selectFromGallery() }) {
+                            HStack(spacing: DesignSystem.Spacing.md) {
+                                Image(systemName: "photo.on.rectangle")
+                                    .font(.title2)
+                                Text("Choose from Gallery")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.oceanBlue)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, DesignSystem.Spacing.lg)
+                            .background(
+                                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.lg)
+                                    .stroke(Color.oceanBlue, lineWidth: 2)
+                            )
+                        }
+                        
+                        // Manual entry button
+                        Button(action: { viewModel.addManually() }) {
+                            Text("Add Manually")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    
+                    Spacer()
+                    
+                    // Tips section
+                    VStack(spacing: DesignSystem.Spacing.md) {
+                        Text("Tips for better detection:")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                        
+                        VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
+                            TipRow(icon: "light.max", text: "Ensure good lighting")
+                            TipRow(icon: "camera.viewfinder", text: "Position items clearly in frame")
+                            TipRow(icon: "number", text: "Capture up to 3 items at once")
+                        }
+                    }
+                    .padding(DesignSystem.Spacing.lg)
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
+                            .fill(Color(.systemBackground))
+                            .shadow(
+                                color: Color.black.opacity(0.1),
+                                radius: 4,
+                                x: 0,
+                                y: 2
+                            )
+                    )
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.bottom, DesignSystem.Spacing.lg)
+                }
+                
+                // Error overlay
+                if viewModel.hasError {
+                    errorOverlay
                 }
             }
+            .navigationBarHidden(true)
         }
-        .largePadding()
-        .cardStyle()
+        .sheet(isPresented: $viewModel.showingCamera) {
+            CameraView(
+                selectedImage: $viewModel.selectedImage,
+                isPresented: $viewModel.showingCamera,
+                onImageCaptured: { image in
+                    Task {
+                        await viewModel.processImage(image)
+                    }
+                }
+            )
+        }
+        .sheet(isPresented: $viewModel.showingResults) {
+            AIResultsView(detectedItems: $viewModel.detectedItems)
+        }
+        .alert("Camera Permission Required", isPresented: $permissionManager.showingPermissionAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Open Settings") {
+                permissionManager.openSettings()
+            }
+        } message: {
+            Text("Camera access is needed to detect food items. Please enable camera access in Settings.")
+        }
+        .alert("Error", isPresented: .constant(viewModel.hasError)) {
+            Button("OK") {
+                viewModel.clearError()
+            }
+        } message: {
+            if let error = viewModel.errorMessage {
+                Text(error)
+            }
+        }
     }
     
-    // MARK: - Action Buttons
+    // MARK: - Error Overlay
     
-    private var actionButtons: some View {
+    private var errorOverlay: some View {
         VStack(spacing: DesignSystem.Spacing.md) {
-            if selectedAddMethod == .manual {
-                Button("Create Custom Item") {
-                    viewModel.showManualEntry()
-                }
-                .buttonStyle(backgroundColor: .oceanBlue, foregroundColor: .white)
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 40))
+                .foregroundColor(.softCoral)
+            
+            Text("Something went wrong")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+            
+            if let error = viewModel.errorMessage {
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
             }
             
-            Button("Add to Shopping List Instead") {
-                viewModel.addToShoppingList()
-                dismiss()
+            Button("Try Again") {
+                viewModel.clearError()
             }
-            .font(DesignSystem.Typography.callout)
-            .foregroundColor(.oceanBlue)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundColor(.white)
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .fill(Color.oceanBlue)
+            )
         }
-    }
-}
-
-// MARK: - Add Method Enum
-
-enum AddMethod: String, CaseIterable {
-    case camera = "camera"
-    case barcode = "barcode"
-    case manual = "manual"
-    
-    var title: String {
-        switch self {
-        case .camera: return "Camera"
-        case .barcode: return "Barcode"
-        case .manual: return "Manual"
-        }
-    }
-    
-    var icon: String {
-        switch self {
-        case .camera: return "camera.fill"
-        case .barcode: return "barcode.viewfinder"
-        case .manual: return "pencil"
-        }
-    }
-}
-
-// MARK: - Quick Add Item
-
-struct QuickAddItem {
-    let name: String
-    let category: FoodCategory
-    let defaultDays: Int
-    let emoji: String
-    
-    static let samples = [
-        QuickAddItem(name: "Milk", category: .dairy, defaultDays: 7, emoji: "🥛"),
-        QuickAddItem(name: "Bread", category: .pantry, defaultDays: 5, emoji: "🍞"),
-        QuickAddItem(name: "Apples", category: .fruits, defaultDays: 7, emoji: "🍎"),
-        QuickAddItem(name: "Chicken", category: .meat, defaultDays: 3, emoji: "🍗"),
-        QuickAddItem(name: "Carrots", category: .vegetables, defaultDays: 14, emoji: "🥕"),
-        QuickAddItem(name: "Yogurt", category: .dairy, defaultDays: 10, emoji: "🍯")
-    ]
-}
-
-// MARK: - Quick Add Button
-
-struct QuickAddButton: View {
-    let item: QuickAddItem
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: DesignSystem.Spacing.xs) {
-                Text(item.emoji)
-                    .font(.largeTitle)
-                
-                Text(item.name)
-                    .font(DesignSystem.Typography.caption1)
-                    .foregroundColor(.primaryText)
-            }
-        }
-        .frame(height: 80)
-        .frame(maxWidth: .infinity)
-        .cardStyle()
-    }
-}
-
-// MARK: - Placeholder Views
-
-struct CameraView: View {
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            VStack {
-                Text("📷")
-                    .font(.system(size: 100))
-                
-                Text("Camera View")
-                    .font(DesignSystem.Typography.title1)
-                
-                Text("Camera functionality will be implemented here")
-                    .font(DesignSystem.Typography.body)
-                    .foregroundColor(.secondaryText)
-                    .multilineTextAlignment(.center)
-            }
-            .navigationTitle("Camera")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-struct BarcodeScannerView: View {
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            VStack {
-                Text("📊")
-                    .font(.system(size: 100))
-                
-                Text("Barcode Scanner")
-                    .font(DesignSystem.Typography.title1)
-                
-                Text("Barcode scanning functionality will be implemented here")
-                    .font(DesignSystem.Typography.body)
-                    .foregroundColor(.secondaryText)
-                    .multilineTextAlignment(.center)
-            }
-            .navigationTitle("Scan Barcode")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - View Model
-
-class AddItemViewModel: ObservableObject {
-    @Published var isLoading = false
-    @Published var selectedMethod: AddMethod = .manual
-    
-    func addQuickItem(_ item: QuickAddItem, context: NSManagedObjectContext) {
-        let expirationDate = Calendar.current.date(byAdding: .day, value: item.defaultDays, to: Date()) ?? Date()
-        
-        _ = FoodItem.create(
-            in: context,
-            name: item.name,
-            category: item.category,
-            quantity: 1.0,
-            unit: .pieces,
-            expirationDate: expirationDate
+        .padding(DesignSystem.Spacing.xl)
+        .background(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.lg)
+                .fill(Color(.systemBackground))
+                .shadow(
+                    color: Color.black.opacity(0.2),
+                    radius: 8,
+                    x: 0,
+                    y: 4
+                )
         )
-        
-        try? context.save()
+        .padding(DesignSystem.Spacing.lg)
     }
     
-    func showManualEntry() {
-        // Navigate to detailed manual entry form
-    }
+    // MARK: - Camera Permission Handling
     
-    func addToShoppingList() {
-        // Navigate to shopping list
+    private func checkCameraPermissionAndCapture() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            // Camera is authorized, proceed with capture
+            viewModel.captureImage()
+            
+        case .notDetermined:
+            // Request permission
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        viewModel.captureImage()
+                    } else {
+                        permissionManager.showingPermissionAlert = true
+                    }
+                }
+            }
+            
+        case .denied, .restricted:
+            // Permission denied, show alert
+            permissionManager.showingPermissionAlert = true
+            
+        @unknown default:
+            // Handle future cases
+            permissionManager.showingPermissionAlert = true
+        }
     }
 }
 
-// MARK: - Preview
+// MARK: - Tip Row
+
+struct TipRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: DesignSystem.Spacing.sm) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundColor(.oceanBlue)
+                .frame(width: 16)
+            
+            Text(text)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+        }
+    }
+}
 
 #Preview {
     AddItemView()
-        .environment(\.managedObjectContext, PreviewHelper.createPreviewContext())
+        .environment(\.managedObjectContext, PersistenceController.preview.viewContext)
 }

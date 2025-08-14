@@ -6,346 +6,332 @@
 //
 
 import Foundation
-import CoreData
 
-/// Manages creation of mock data for testing and development
-class MockDataManager {
+/// Provides comprehensive mock data for development and testing
+final class MockDataManager {
     
+    /// Shared instance for consistent mock data across the app
     static let shared = MockDataManager()
     
     private init() {}
     
-    // MARK: - Main Mock Data Creation
-    
-    /// Create comprehensive mock data for testing
-    func createMockData(in context: NSManagedObjectContext) {
-        // Clear existing data first
-        clearAllData(in: context)
+    /// Generate comprehensive mock food items for fridge dashboard
+    func generateMockFoodItems() -> [FoodItem] {
+        let calendar = Calendar.current
+        let today = Date()
         
-        // Create food items
-        createMockFoodItems(in: context)
-        
-        // Create grocery items
-        createMockGroceryItems(in: context)
-        
-        // Save the context
-        do {
-            try context.save()
-            print("✅ Mock data created successfully")
-        } catch {
-            print("❌ Error creating mock data: \(error)")
-        }
-    }
-    
-    // MARK: - Food Items Mock Data
-    
-    private func createMockFoodItems(in context: NSManagedObjectContext) {
-        let mockFoodItems = [
-            // Fresh Items
-            MockFoodItem(
-                name: "Fresh Apples",
-                category: .fruits,
-                quantity: 6.0,
-                unit: .pieces,
-                daysFromNow: 8,
-                storage: "Refrigerator"
-            ),
-            MockFoodItem(
-                name: "Organic Spinach",
-                category: .vegetables,
-                quantity: 1.0,
-                unit: .packages,
-                daysFromNow: 5,
-                storage: "Refrigerator"
-            ),
-            MockFoodItem(
+        return [
+            // EXPIRED ITEMS (1-2 items)
+            FoodItem(
                 name: "Greek Yogurt",
                 category: .dairy,
-                quantity: 2.0,
-                unit: .cartons,
-                daysFromNow: 10,
-                storage: "Refrigerator"
-            ),
-            MockFoodItem(
-                name: "Whole Wheat Bread",
-                category: .pantry,
-                quantity: 1.0,
+                quantity: 1,
                 unit: .packages,
-                daysFromNow: 6,
-                storage: "Pantry"
-            ),
-            MockFoodItem(
-                name: "Orange Juice",
-                category: .beverages,
-                quantity: 1.0,
-                unit: .cartons,
-                daysFromNow: 7,
+                expirationDate: calendar.date(byAdding: .day, value: -2, to: today)!,
+                zoneTag: "Middle shelf",
                 storage: "Refrigerator"
             ),
             
-            // Expiring Soon Items
-            MockFoodItem(
-                name: "Milk",
-                category: .dairy,
-                quantity: 1.0,
-                unit: .cartons,
-                daysFromNow: 2,
+            // EXPIRING TODAY/TOMORROW (3-4 items)
+            FoodItem(
+                name: "Organic Spinach",
+                category: .vegetables,
+                quantity: 200,
+                unit: .grams,
+                expirationDate: calendar.date(byAdding: .day, value: 0, to: today)!,
+                zoneTag: "Crisper drawer",
                 storage: "Refrigerator"
             ),
-            MockFoodItem(
+            
+            FoodItem(
                 name: "Chicken Breast",
+                category: .meat,
+                quantity: 0.8,
+                unit: .kilograms,
+                expirationDate: calendar.date(byAdding: .day, value: 1, to: today)!,
+                zoneTag: "Bottom shelf",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Leftover Pizza",
+                category: .leftovers,
+                quantity: 3,
+                unit: .pieces,
+                expirationDate: calendar.date(byAdding: .day, value: 1, to: today)!,
+                zoneTag: "Top shelf",
+                storage: "Refrigerator"
+            ),
+            
+            // EXPIRING SOON (2-3 days)
+            FoodItem(
+                name: "Fresh Blueberries",
+                category: .fruits,
+                quantity: 1,
+                unit: .packages,
+                expirationDate: calendar.date(byAdding: .day, value: 2, to: today)!,
+                zoneTag: "Crisper drawer",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Whole Milk",
+                category: .dairy,
+                quantity: 1,
+                unit: .cartons,
+                expirationDate: calendar.date(byAdding: .day, value: 3, to: today)!,
+                zoneTag: "Door shelf",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Sourdough Bread",
+                category: .pantry,
+                quantity: 1,
+                unit: .packages,
+                expirationDate: calendar.date(byAdding: .day, value: 3, to: today)!,
+                zoneTag: "Counter",
+                storage: "Pantry"
+            ),
+            
+            // FRESH ITEMS (4+ days)
+            FoodItem(
+                name: "Red Bell Peppers",
+                category: .vegetables,
+                quantity: 3,
+                unit: .pieces,
+                expirationDate: calendar.date(byAdding: .day, value: 5, to: today)!,
+                zoneTag: "Crisper drawer",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Honeycrisp Apples",
+                category: .fruits,
+                quantity: 6,
+                unit: .pieces,
+                expirationDate: calendar.date(byAdding: .day, value: 7, to: today)!,
+                zoneTag: "Crisper drawer",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Sharp Cheddar Cheese",
+                category: .dairy,
+                quantity: 300,
+                unit: .grams,
+                expirationDate: calendar.date(byAdding: .day, value: 14, to: today)!,
+                zoneTag: "Middle shelf",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Ground Turkey",
                 category: .meat,
                 quantity: 0.5,
                 unit: .kilograms,
-                daysFromNow: 1,
+                expirationDate: calendar.date(byAdding: .day, value: 4, to: today)!,
+                zoneTag: "Bottom shelf",
                 storage: "Refrigerator"
             ),
-            MockFoodItem(
+            
+            FoodItem(
+                name: "Orange Juice",
+                category: .beverages,
+                quantity: 1,
+                unit: .cartons,
+                expirationDate: calendar.date(byAdding: .day, value: 10, to: today)!,
+                zoneTag: "Door shelf",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Canned Tomatoes",
+                category: .pantry,
+                quantity: 2,
+                unit: .cans,
+                expirationDate: calendar.date(byAdding: .month, value: 18, to: today)!,
+                zoneTag: "Pantry shelf",
+                storage: "Pantry"
+            ),
+            
+            FoodItem(
+                name: "Frozen Peas",
+                category: .frozen,
+                quantity: 1,
+                unit: .packages,
+                expirationDate: calendar.date(byAdding: .month, value: 6, to: today)!,
+                zoneTag: "Freezer drawer",
+                storage: "Freezer"
+            ),
+            
+            FoodItem(
+                name: "Dijon Mustard",
+                category: .condiments,
+                quantity: 1,
+                unit: .bottles,
+                expirationDate: calendar.date(byAdding: .month, value: 12, to: today)!,
+                zoneTag: "Door shelf",
+                storage: "Refrigerator"
+            ),
+            
+            // ADDITIONAL VARIETY
+            FoodItem(
+                name: "Baby Carrots",
+                category: .vegetables,
+                quantity: 500,
+                unit: .grams,
+                expirationDate: calendar.date(byAdding: .day, value: 8, to: today)!,
+                zoneTag: "Crisper drawer",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
                 name: "Bananas",
                 category: .fruits,
-                quantity: 5.0,
+                quantity: 5,
                 unit: .pieces,
-                daysFromNow: 3,
+                expirationDate: calendar.date(byAdding: .day, value: 4, to: today)!,
+                zoneTag: "Counter",
                 storage: "Counter"
             ),
             
-            // Expired Items
-            MockFoodItem(
-                name: "Leftover Pizza",
-                category: .leftovers,
-                quantity: 3.0,
+            FoodItem(
+                name: "Salmon Fillets",
+                category: .meat,
+                quantity: 2,
                 unit: .pieces,
-                daysFromNow: -1,
-                storage: "Refrigerator"
-            ),
-            MockFoodItem(
-                name: "Expired Yogurt",
-                category: .dairy,
-                quantity: 1.0,
-                unit: .cartons,
-                daysFromNow: -3,
+                expirationDate: calendar.date(byAdding: .day, value: 2, to: today)!,
+                zoneTag: "Bottom shelf",
                 storage: "Refrigerator"
             ),
             
-            // Frozen Items
-            MockFoodItem(
-                name: "Frozen Vegetables",
-                category: .frozen,
-                quantity: 2.0,
+            FoodItem(
+                name: "Cream Cheese",
+                category: .dairy,
+                quantity: 1,
                 unit: .packages,
-                daysFromNow: 90,
-                storage: "Freezer"
+                expirationDate: calendar.date(byAdding: .day, value: 12, to: today)!,
+                zoneTag: "Middle shelf",
+                storage: "Refrigerator"
             ),
-            MockFoodItem(
+            
+            FoodItem(
+                name: "Sparkling Water",
+                category: .beverages,
+                quantity: 6,
+                unit: .bottles,
+                expirationDate: calendar.date(byAdding: .month, value: 6, to: today)!,
+                zoneTag: "Bottom shelf",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Pasta Sauce",
+                category: .pantry,
+                quantity: 1,
+                unit: .bottles,
+                expirationDate: calendar.date(byAdding: .month, value: 8, to: today)!,
+                zoneTag: "Pantry shelf",
+                storage: "Pantry"
+            ),
+            
+            FoodItem(
                 name: "Ice Cream",
                 category: .frozen,
-                quantity: 1.0,
-                unit: .cartons,
-                daysFromNow: 60,
+                quantity: 1,
+                unit: .packages,
+                expirationDate: calendar.date(byAdding: .month, value: 3, to: today)!,
+                zoneTag: "Freezer top",
                 storage: "Freezer"
             ),
             
-            // Condiments & Pantry
-            MockFoodItem(
-                name: "Ketchup",
-                category: .condiments,
-                quantity: 1.0,
-                unit: .bottles,
-                daysFromNow: 120,
-                storage: "Refrigerator"
-            ),
-            MockFoodItem(
-                name: "Pasta",
-                category: .pantry,
-                quantity: 2.0,
-                unit: .packages,
-                daysFromNow: 365,
-                storage: "Pantry"
-            ),
-            MockFoodItem(
+            FoodItem(
                 name: "Olive Oil",
                 category: .condiments,
-                quantity: 1.0,
+                quantity: 1,
                 unit: .bottles,
-                daysFromNow: 180,
+                expirationDate: calendar.date(byAdding: .year, value: 2, to: today)!,
+                zoneTag: "Pantry shelf",
+                storage: "Pantry"
+            ),
+            
+            FoodItem(
+                name: "Mixed Greens",
+                category: .vegetables,
+                quantity: 1,
+                unit: .packages,
+                expirationDate: calendar.date(byAdding: .day, value: 6, to: today)!,
+                zoneTag: "Crisper drawer",
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Strawberries",
+                category: .fruits,
+                quantity: 1,
+                unit: .packages,
+                expirationDate: calendar.date(byAdding: .day, value: 3, to: today)!,
+                zoneTag: "Top shelf",
+                storage: "Refrigerator"
+            )
+        ]
+    }
+    
+    /// Generate minimal mock data for testing
+    func generateMinimalMockData() -> [FoodItem] {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        return [
+            FoodItem(
+                name: "Test Apple",
+                category: .fruits,
+                quantity: 1,
+                unit: .pieces,
+                expirationDate: calendar.date(byAdding: .day, value: 2, to: today)!,
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Test Milk",
+                category: .dairy,
+                quantity: 1,
+                unit: .cartons,
+                expirationDate: calendar.date(byAdding: .day, value: 5, to: today)!,
+                storage: "Refrigerator"
+            )
+        ]
+    }
+    
+    /// Generate mock data with no expiring items (for empty state testing)
+    func generateFreshMockData() -> [FoodItem] {
+        let calendar = Calendar.current
+        let today = Date()
+        
+        return [
+            FoodItem(
+                name: "Fresh Vegetables",
+                category: .vegetables,
+                quantity: 1,
+                unit: .packages,
+                expirationDate: calendar.date(byAdding: .day, value: 10, to: today)!,
+                storage: "Refrigerator"
+            ),
+            
+            FoodItem(
+                name: "Long-life Milk",
+                category: .dairy,
+                quantity: 1,
+                unit: .cartons,
+                expirationDate: calendar.date(byAdding: .month, value: 1, to: today)!,
                 storage: "Pantry"
             )
         ]
-        
-        for mockItem in mockFoodItems {
-            let expirationDate = Calendar.current.date(
-                byAdding: .day,
-                value: mockItem.daysFromNow,
-                to: Date()
-            ) ?? Date()
-            
-            _ = FoodItem.create(
-                in: context,
-                name: mockItem.name,
-                category: mockItem.category,
-                quantity: mockItem.quantity,
-                unit: mockItem.unit,
-                expirationDate: expirationDate,
-                storage: mockItem.storage
-            )
-        }
-        
-        print("📦 Created \(mockFoodItems.count) mock food items")
     }
     
-    // MARK: - Grocery Items Mock Data
-    
-    private func createMockGroceryItems(in context: NSManagedObjectContext) {
-        let mockGroceryItems = [
-            // Items to buy
-            MockGroceryItem(name: "Tomatoes", category: .vegetables, isPurchased: false),
-            MockGroceryItem(name: "Ground Beef", category: .meat, isPurchased: false),
-            MockGroceryItem(name: "Cheddar Cheese", category: .dairy, isPurchased: false),
-            MockGroceryItem(name: "Sandwich Bread", category: .pantry, isPurchased: false),
-            MockGroceryItem(name: "Sparkling Water", category: .beverages, isPurchased: false),
-            MockGroceryItem(name: "Frozen Berries", category: .frozen, isPurchased: false),
-            MockGroceryItem(name: "Mustard", category: .condiments, isPurchased: false),
-            MockGroceryItem(name: "Onions", category: .vegetables, isPurchased: false),
-            MockGroceryItem(name: "Eggs", category: .dairy, isPurchased: false),
-            MockGroceryItem(name: "Rice", category: .pantry, isPurchased: false),
-            
-            // Already purchased items
-            MockGroceryItem(name: "Paper Towels", category: .other, isPurchased: true),
-            MockGroceryItem(name: "Dish Soap", category: .other, isPurchased: true),
-            MockGroceryItem(name: "Coffee", category: .beverages, isPurchased: true),
-            MockGroceryItem(name: "Cereal", category: .pantry, isPurchased: true),
-            MockGroceryItem(name: "Butter", category: .dairy, isPurchased: true)
-        ]
-        
-        for mockItem in mockGroceryItems {
-            _ = GroceryItem.create(
-                in: context,
-                name: mockItem.name,
-                category: mockItem.category,
-                isPurchased: mockItem.isPurchased
-            )
-        }
-        
-        print("🛒 Created \(mockGroceryItems.count) mock grocery items")
-    }
-    
-    // MARK: - Quick Test Data
-    
-    /// Create minimal test data for quick testing
-    func createQuickTestData(in context: NSManagedObjectContext) {
-        // Create a few food items
-        let quickItems = [
-            ("Apple", FoodCategory.fruits, 3),
-            ("Milk", FoodCategory.dairy, 2),
-            ("Bread", FoodCategory.pantry, 5)
-        ]
-        
-        for (name, category, days) in quickItems {
-            let expirationDate = Calendar.current.date(byAdding: .day, value: days, to: Date()) ?? Date()
-            _ = FoodItem.create(
-                in: context,
-                name: name,
-                category: category,
-                quantity: 1.0,
-                unit: .pieces,
-                expirationDate: expirationDate
-            )
-        }
-        
-        // Create a few grocery items
-        let groceryItems = [
-            ("Bananas", FoodCategory.fruits),
-            ("Cheese", FoodCategory.dairy),
-            ("Pasta", FoodCategory.pantry)
-        ]
-        
-        for (name, category) in groceryItems {
-            _ = GroceryItem.create(
-                in: context,
-                name: name,
-                category: category
-            )
-        }
-        
-        do {
-            try context.save()
-            print("✅ Quick test data created")
-        } catch {
-            print("❌ Error creating quick test data: \(error)")
-        }
-    }
-    
-    // MARK: - Data Cleanup
-    
-    private func clearAllData(in context: NSManagedObjectContext) {
-        // Clear food items
-        let foodItemFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "FoodItem")
-        let foodItemDeleteRequest = NSBatchDeleteRequest(fetchRequest: foodItemFetch)
-        
-        // Clear grocery items
-        let groceryItemFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "GroceryItem")
-        let groceryItemDeleteRequest = NSBatchDeleteRequest(fetchRequest: groceryItemFetch)
-        
-        do {
-            try context.execute(foodItemDeleteRequest)
-            try context.execute(groceryItemDeleteRequest)
-            print("🗑️ Cleared existing data")
-        } catch {
-            print("❌ Error clearing data: \(error)")
-        }
-    }
-    
-    // MARK: - Convenience Methods
-    
-    /// Check if the database has any data
-    func hasData(in context: NSManagedObjectContext) -> Bool {
-        let foodItemCount = (try? context.count(for: FoodItem.fetchRequest())) ?? 0
-        let groceryItemCount = (try? context.count(for: GroceryItem.fetchRequest())) ?? 0
-        
-        return foodItemCount > 0 || groceryItemCount > 0
-    }
-    
-    /// Get data counts for debugging
-    func getDataCounts(in context: NSManagedObjectContext) -> (foodItems: Int, groceryItems: Int) {
-        let foodItemCount = (try? context.count(for: FoodItem.fetchRequest())) ?? 0
-        let groceryItemCount = (try? context.count(for: GroceryItem.fetchRequest())) ?? 0
-        
-        return (foodItemCount, groceryItemCount)
-    }
-}
-
-// MARK: - Mock Data Structures
-
-private struct MockFoodItem {
-    let name: String
-    let category: FoodCategory
-    let quantity: Double
-    let unit: FoodUnit
-    let daysFromNow: Int
-    let storage: String
-}
-
-private struct MockGroceryItem {
-    let name: String
-    let category: FoodCategory
-    let isPurchased: Bool
-}
-
-// MARK: - PersistenceController Extension
-
-extension PersistenceController {
-    
-    /// Create a test instance with mock data
-    static let mockData: PersistenceController = {
-        let controller = PersistenceController(inMemory: true)
-        MockDataManager.shared.createMockData(in: controller.viewContext)
-        return controller
-    }()
-    
-    /// Create sample data in the shared instance (for development)
-    func loadDevelopmentData() {
-        if !MockDataManager.shared.hasData(in: viewContext) {
-            MockDataManager.shared.createQuickTestData(in: viewContext)
-        }
+    /// Generate empty mock data (for empty state testing)
+    func generateEmptyMockData() -> [FoodItem] {
+        return []
     }
 }
