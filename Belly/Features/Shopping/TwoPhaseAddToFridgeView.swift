@@ -68,7 +68,7 @@ struct SelectionPhaseView: View {
                 .multilineTextAlignment(.center)
             
             List {
-                ForEach(purchasedItems) { item in
+                ForEach(Array(purchasedItems.enumerated()), id: \.element.id) { _, item in
                     HStack {
                         Button(action: {
                             if selectedItems.contains(item.id) {
@@ -81,7 +81,7 @@ struct SelectionPhaseView: View {
                                 Image(systemName: selectedItems.contains(item.id) ? "checkmark.circle.fill" : "circle")
                                     .foregroundColor(selectedItems.contains(item.id) ? .blue : .secondary)
                                 
-                                Text(item.displayText)
+                                Text("\(item.name) \(item.quantity, specifier: "%.0f") \(item.unit)")
                                     .foregroundColor(.primary)
                                 
                                 Spacer()
@@ -273,9 +273,9 @@ struct ItemConfigurationCard: View {
 #Preview {
     TwoPhaseAddToFridgeView(
         purchasedItems: [
-            GroceryItem(text: "Milk 2 liters", isPurchased: true),
-            GroceryItem(text: "5 apples", isPurchased: true),
-            GroceryItem(text: "Bread 1 loaf", isPurchased: true)
+            GroceryItem(name: "Milk", quantity: 2.0, unit: "liters", isPurchased: true),
+            GroceryItem(name: "Apples", quantity: 5.0, unit: "pieces", isPurchased: true),
+            GroceryItem(name: "Bread", quantity: 1.0, unit: "loaf", isPurchased: true)
         ],
         onComplete: { _ in }
     )

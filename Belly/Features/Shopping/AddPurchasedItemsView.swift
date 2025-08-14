@@ -23,12 +23,14 @@ struct AddPurchasedItemsView: View {
                     .multilineTextAlignment(.center)
                 
                 // Show purchased items list
-                List(purchasedItems) { item in
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                        Text(item.displayText)
-                        Spacer()
+                List {
+                    ForEach(purchasedItems) { item in
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("\(item.name) \(item.quantity, specifier: "%.0f") \(item.unit)")
+                            Spacer()
+                        }
                     }
                 }
                 .frame(maxHeight: 200)
@@ -113,7 +115,7 @@ struct ManualEntryForPurchasedView: View {
                             .foregroundColor(.secondary)
                         
                         VStack(spacing: 8) {
-                            Text(item.displayText)
+                            Text("\(item.name) \(item.quantity, specifier: "%.0f") \(item.unit)")
                                 .font(.headline)
                         }
                         .padding()
@@ -194,7 +196,7 @@ struct ManualEntryForPurchasedView: View {
         // Add to fridge view model
         fridgeViewModel.foodItems.append(foodItem)
         
-        print("Added to fridge: \(groceryItem.displayText)")
+        print("Added to fridge: \(groceryItem.name) \(groceryItem.quantity) \(groceryItem.unit)")
     }
     
     private func nextItem() {
@@ -211,8 +213,8 @@ struct ManualEntryForPurchasedView: View {
 #Preview {
     AddPurchasedItemsView(
         purchasedItems: [
-            GroceryItem(text: "Organic Spinach", isPurchased: true),
-            GroceryItem(text: "Greek Yogurt", isPurchased: true)
+            GroceryItem(name: "Organic Spinach", isPurchased: true),
+            GroceryItem(name: "Greek Yogurt", isPurchased: true)
         ],
         onComplete: {}
     )

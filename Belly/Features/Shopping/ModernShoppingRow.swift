@@ -1,5 +1,5 @@
 //
-//  NewItemRow.swift
+//  ModernShoppingRow.swift
 //  Belly
 //
 //  Created by Han Dong on 8/14/25.
@@ -7,31 +7,44 @@
 
 import SwiftUI
 
-struct NewItemRow: View {
-    let onAdd: (String, Double, String) -> Void
+struct ModernShoppingRow: View {
+    @ObservedObject var item: GroceryItem
+    let onTogglePurchased: () -> Void
+    let onUpdate: (String, Double, String) -> Void
+    let onDelete: () -> Void
     
-    @State private var newItemName = ""
-    @State private var newQuantity: Double = 1.0
-    @State private var newUnit = "pieces"
+    @State private var editedName: String = ""
+    @State private var editedQuantity: Double = 1.0
+    @State private var editedUnit: String = "pieces"
     @FocusState private var isNameFocused: Bool
     @FocusState private var isQuantityFocused: Bool
     
     var body: some View {
         HStack(spacing: 12) {
-            // Empty circle
-            Image(systemName: "plus.circle")
-                .foregroundColor(.blue)
-                .font(.title3)
+            // Checkbox
+            Button(action: onTogglePurchased) {
+                Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(item.isPurchased ? .green : .secondary)
+                    .font(.title3)
+            }
+            .buttonStyle(PlainButtonStyle())
             
+            // Main content area
             VStack(spacing: 8) {
                 // Item name row
-                TextField("Add new item...", text: $newItemName)
+                TextField("Item name", text: $editedName)
                     .focused($isNameFocused)
                     .textFieldStyle(.plain)
                     .font(.body)
-                    .foregroundColor(.primary)
+                    .strikethrough(item.isPurchased)
+                    .foregroundColor(item.isPurchased ? .secondary : .primary)
                     .onSubmit {
-                        addItem()
+                        updateItem()
+                    }
+                    .onChange(of: isNameFocused) { focused in
+                        if !focused {
+                            updateItem()
+                        }
                     }
                 
                 // Quantity and unit row
@@ -42,7 +55,7 @@ struct NewItemRow: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
-                        TextField("1", value: $newQuantity, format: .number)
+                        TextField("1", value: $editedQuantity, format: .number)
                             .focused($isQuantityFocused)
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.plain)
@@ -57,6 +70,14 @@ struct NewItemRow: View {
                                             .stroke(isQuantityFocused ? Color.blue : Color.clear, lineWidth: 1)
                                     )
                             )
+                            .onSubmit {
+                                updateItem()
+                            }
+                            .onChange(of: isQuantityFocused) { focused in
+                                if !focused {
+                                    updateItem()
+                                }
+                            }
                     }
                     
                     // Unit selector
@@ -68,12 +89,13 @@ struct NewItemRow: View {
                         Menu {
                             ForEach(["pieces", "kg", "g", "liters", "bottles", "packs", "cans", "boxes"], id: \.self) { unit in
                                 Button(unit) {
-                                    newUnit = unit
+                                    editedUnit = unit
+                                    updateItem()
                                 }
                             }
                         } label: {
                             HStack(spacing: 4) {
-                                Text(newUnit)
+                                Text(editedUnit)
                                     .font(.body)
                                     .foregroundColor(.primary)
                                 
@@ -97,30 +119,45 @@ struct NewItemRow: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [8, 4]))
-                .foregroundColor(.blue.opacity(0.3))
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
         )
-        .onTapGesture {
-            isNameFocused = true
+        .opacity(item.isPurchased ? 0.7 : 1.0)
+        .scaleEffect(item.isPurchased ? 0.98 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: item.isPurchased)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button("Delete", role: .destructive, action: onDelete)
+        }
+        .onAppear {
+            editedName = item.name
+            editedQuantity = item.quantity
+            editedUnit = item.unit
         }
     }
     
-    private func addItem() {
-        let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func updateItem() {
+        let trimmedName = editedName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedName.isEmpty {
-            onAdd(trimmedName, newQuantity, newUnit)
-            
-            // Reset form
-            newItemName = ""
-            newQuantity = 1.0
-            newUnit = "pieces"
+            onUpdate(trimmedName, editedQuantity, editedUnit)
         }
     }
 }
 
 #Preview {
-    NewItemRow { name, quantity, unit in
-        print("Adding: \(name) \(quantity) \(unit)")
+    VStack(spacing: 12) {
+        ModernShoppingRow(
+            item: GroceryItem(name: "Milk", quantity: 2.0, unit: "liters"),
+            onTogglePurchased: {},
+            onUpdate: { _, _, _ in },
+            onDelete: {}
+        )
+        
+        ModernShoppingRow(
+            item: GroceryItem(name: "Apples", quantity: 5.0, unit: "pieces", isPurchased: true),
+            onTogglePurchased: {},
+            onUpdate: { _, _, _ in },
+            onDelete: {}
+        )
     }
     .padding()
 }
