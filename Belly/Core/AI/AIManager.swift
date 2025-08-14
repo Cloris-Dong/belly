@@ -22,35 +22,35 @@ class AIManager: ObservableObject {
         // Return realistic mock detections based on common scenarios
         let scenarios = [
             // Single item scenarios
-            [DetectedFood(name: "Organic Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92)],
+            [DetectedFood(name: "Organic Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92, quantity: 1.0, unit: "packages")],
             
-            [DetectedFood(name: "Red Bell Pepper", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.88)],
+            [DetectedFood(name: "Red Bell Pepper", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.88, quantity: 2.0, unit: "pieces")],
             
-            [DetectedFood(name: "Greek Yogurt", category: "Dairy", shelfLifeDays: 14, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.94)],
+            [DetectedFood(name: "Greek Yogurt", category: "Dairy", shelfLifeDays: 14, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.94, quantity: 1.0, unit: "cartons")],
             
-            [DetectedFood(name: "Chicken Breast", category: "Meat", shelfLifeDays: 5, storage: "Refrigerator", location: "Bottom Shelf", confidence: 0.89)],
+            [DetectedFood(name: "Chicken Breast", category: "Meat", shelfLifeDays: 5, storage: "Refrigerator", location: "Bottom Shelf", confidence: 0.89, quantity: 500.0, unit: "grams")],
             
             // Multiple items scenarios
             [
-                DetectedFood(name: "Fresh Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92),
-                DetectedFood(name: "Cherry Tomatoes", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.88)
+                DetectedFood(name: "Fresh Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92, quantity: 1.0, unit: "packages"),
+                DetectedFood(name: "Cherry Tomatoes", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.88, quantity: 250.0, unit: "grams")
             ],
             
             [
-                DetectedFood(name: "Milk", category: "Dairy", shelfLifeDays: 10, storage: "Refrigerator", location: "Door Shelf", confidence: 0.96),
-                DetectedFood(name: "Eggs", category: "Dairy", shelfLifeDays: 21, storage: "Refrigerator", location: "Door Bin", confidence: 0.91),
-                DetectedFood(name: "Butter", category: "Dairy", shelfLifeDays: 30, storage: "Refrigerator", location: "Door Shelf", confidence: 0.87)
+                DetectedFood(name: "Milk", category: "Dairy", shelfLifeDays: 10, storage: "Refrigerator", location: "Door Shelf", confidence: 0.96, quantity: 1.0, unit: "cartons"),
+                DetectedFood(name: "Eggs", category: "Dairy", shelfLifeDays: 21, storage: "Refrigerator", location: "Door Bin", confidence: 0.91, quantity: 12.0, unit: "pieces"),
+                DetectedFood(name: "Butter", category: "Dairy", shelfLifeDays: 30, storage: "Refrigerator", location: "Door Shelf", confidence: 0.87, quantity: 250.0, unit: "grams")
             ],
             
             [
-                DetectedFood(name: "Organic Bananas", category: "Fruits", shelfLifeDays: 7, storage: "Refrigerator", location: "Top Shelf", confidence: 0.95),
-                DetectedFood(name: "Strawberries", category: "Fruits", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.93)
+                DetectedFood(name: "Organic Bananas", category: "Fruits", shelfLifeDays: 7, storage: "Refrigerator", location: "Top Shelf", confidence: 0.95, quantity: 6.0, unit: "pieces"),
+                DetectedFood(name: "Strawberries", category: "Fruits", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.93, quantity: 1.0, unit: "packages")
             ],
             
             // Edge cases
             [
-                DetectedFood(name: "Apples", category: "Fruits", shelfLifeDays: 14, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.78),
-                DetectedFood(name: "Unknown Item", category: "Other", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.45)
+                DetectedFood(name: "Apples", category: "Fruits", shelfLifeDays: 14, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.78, quantity: 4.0, unit: "pieces"),
+                DetectedFood(name: "Unknown Item", category: "Other", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.45, quantity: 1.0, unit: "pieces")
             ],
             
             // No detection scenario

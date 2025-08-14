@@ -17,15 +17,21 @@ struct DetectedFood: Identifiable, Codable {
     var location: String // Add explicit location property
     var confidence: Double
     
+    // ADD quantity and unit properties
+    var quantity: Double = 1.0
+    var unit: String = "pieces"
+    
     // MARK: - Initializer
     
-    init(name: String, category: String, shelfLifeDays: Int, storage: String = "Refrigerator", location: String = "Middle Shelf", confidence: Double) {
+    init(name: String, category: String, shelfLifeDays: Int, storage: String = "Refrigerator", location: String = "Middle Shelf", confidence: Double, quantity: Double = 1.0, unit: String = "pieces") {
         self.name = name
         self.category = category
         self.shelfLifeDays = shelfLifeDays
         self.storage = storage
         self.location = location
         self.confidence = confidence
+        self.quantity = quantity
+        self.unit = unit
     }
     
     // Computed properties for UI

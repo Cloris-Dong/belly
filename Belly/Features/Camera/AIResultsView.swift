@@ -166,7 +166,9 @@ struct AIResultsView: View {
             shelfLifeDays: 7,
             storage: "Refrigerator",
             location: "Middle Shelf",
-            confidence: 1.0
+            confidence: 1.0,
+            quantity: 1.0,
+            unit: "pieces"
         )
         detectedItems.append(newItem)
     }
@@ -179,8 +181,8 @@ struct AIResultsView: View {
             let foodItem = FoodItem(
                 name: detectedItem.name.isEmpty ? "Unknown Item" : detectedItem.name,
                 category: FoodCategory.allCases.first { $0.rawValue == detectedItem.category } ?? .other,
-                quantity: 1.0,
-                unit: .pieces,
+                quantity: detectedItem.quantity, // Use quantity from DetectedFood
+                unit: FoodUnit.allCases.first { $0.rawValue == detectedItem.unit } ?? .pieces, // Use unit from DetectedFood
                 expirationDate: Calendar.current.date(byAdding: .day, value: detectedItem.shelfLifeDays, to: Date()) ?? Date(),
                 dateAdded: Date(),
                 zoneTag: detectedItem.location, // Save location as zoneTag
@@ -265,7 +267,7 @@ struct DetectedItemCard: View {
                     )
                 }
                 
-                // Shelf life and storage
+                // Shelf life and quantity
                 HStack(spacing: DesignSystem.Spacing.md) {
                     // Shelf life
                     VStack(alignment: .leading, spacing: 4) {
@@ -280,35 +282,58 @@ struct DetectedItemCard: View {
                     
                     Spacer()
                     
-                    // Location picker
+                    // Quantity and unit
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Location")
+                        Text("Quantity")
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundColor(.primary)
                         
-                        Picker("Location", selection: $item.location) {
-                            ForEach(locationManager.allLocations, id: \.self) { location in
-                                Text(location).tag(location)
-                            }
+                        HStack(spacing: DesignSystem.Spacing.sm) {
+                            TextField("Qty", value: $item.quantity, format: .number)
+                                .keyboardType(.decimalPad)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 60)
                             
-                            Text("Add New Location...")
-                                .foregroundColor(.oceanBlue)
-                                .tag("add_new")
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, DesignSystem.Spacing.sm)
-                        .padding(.vertical, DesignSystem.Spacing.xs)
-                        .background(
-                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
-                        )
-                        .onChange(of: item.location) { newValue in
-                            if newValue == "add_new" {
-                                showingAddLocation = true
-                                item.location = locationManager.allLocations.first ?? "Middle Shelf"
+                            Picker("Unit", selection: $item.unit) {
+                                ForEach(FoodUnit.allCases, id: \.rawValue) { unit in
+                                    Text(unit.rawValue).tag(unit.rawValue)
+                                }
                             }
+                            .pickerStyle(MenuPickerStyle())
+                            .frame(width: 100)
+                        }
+                    }
+                }
+                
+                // Location picker
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Location")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    
+                    Picker("Location", selection: $item.location) {
+                        ForEach(locationManager.allLocations, id: \.self) { location in
+                            Text(location).tag(location)
+                        }
+                        
+                        Text("Add New Location...")
+                            .foregroundColor(.oceanBlue)
+                            .tag("add_new")
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, DesignSystem.Spacing.sm)
+                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .background(
+                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
+                    .onChange(of: item.location) { newValue in
+                        if newValue == "add_new" {
+                            showingAddLocation = true
+                            item.location = locationManager.allLocations.first ?? "Middle Shelf"
                         }
                     }
                 }
@@ -378,8 +403,8 @@ struct DetectedItemCard: View {
 #Preview {
     AIResultsView(
         detectedItems: .constant([
-            DetectedFood(name: "Organic Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92),
-            DetectedFood(name: "Red Bell Pepper", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.88)
+            DetectedFood(name: "Organic Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92, quantity: 1.0, unit: "packages"),
+            DetectedFood(name: "Red Bell Pepper", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.88, quantity: 2.0, unit: "pieces")
         ])
     )
 }

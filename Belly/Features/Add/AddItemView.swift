@@ -8,10 +8,13 @@
 import SwiftUI
 import UIKit
 import AVFoundation
+import PhotosUI
 
 struct AddItemView: View {
     @StateObject private var viewModel = AddItemViewModel()
     @StateObject private var permissionManager = CameraPermissionManager()
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var showingManualEntry = false
     
     var body: some View {
         NavigationView {
@@ -65,8 +68,8 @@ struct AddItemView: View {
                             )
                         }
                         
-                        // Gallery button
-                        Button(action: { viewModel.selectFromGallery() }) {
+                        // Gallery picker
+                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
                             HStack(spacing: DesignSystem.Spacing.md) {
                                 Image(systemName: "photo.on.rectangle")
                                     .font(.title2)
@@ -84,7 +87,7 @@ struct AddItemView: View {
                         }
                         
                         // Manual entry button
-                        Button(action: { viewModel.addManually() }) {
+                        Button(action: { showingManualEntry = true }) {
                             Text("Add Manually")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
@@ -143,6 +146,14 @@ struct AddItemView: View {
         }
         .sheet(isPresented: $viewModel.showingResults) {
             AIResultsView(detectedItems: $viewModel.detectedItems)
+        }
+        .sheet(isPresented: $showingManualEntry) {
+            ManualEntryView()
+        }
+        .onChange(of: selectedPhoto) { newPhoto in
+            if let newPhoto = newPhoto {
+                loadImageFromGallery(newPhoto)
+            }
         }
         .alert("Camera Permission Required", isPresented: $permissionManager.showingPermissionAlert) {
             Button("Cancel", role: .cancel) { }
@@ -208,6 +219,28 @@ struct AddItemView: View {
                 )
         )
         .padding(DesignSystem.Spacing.lg)
+    }
+    
+    // MARK: - Gallery Image Loading
+    
+    private func loadImageFromGallery(_ item: PhotosPickerItem) {
+        item.loadTransferable(type: Data.self) { result in
+            switch result {
+            case .success(let data):
+                if let data = data, let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        viewModel.selectedImage = image
+                        Task {
+                            await viewModel.processImage(image)
+                        }
+                    }
+                }
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    viewModel.errorMessage = "Failed to load image: \(error.localizedDescription)"
+                }
+            }
+        }
     }
     
     // MARK: - Camera Permission Handling
