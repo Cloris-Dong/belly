@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ModernShoppingRow: View {
-    @ObservedObject var item: GroceryItem
+    let item: GroceryItem
     let onTogglePurchased: () -> Void
     let onUpdate: (String, Double, String) -> Void
     let onDelete: () -> Void

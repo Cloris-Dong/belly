@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 class ShoppingViewModel: ObservableObject {
     @Published var groceryItems: [GroceryItem] = []
@@ -32,13 +33,21 @@ class ShoppingViewModel: ObservableObject {
     }
     
     func updateItem(_ item: GroceryItem, name: String, quantity: Double, unit: String) {
-        item.name = name
-        item.quantity = quantity
-        item.unit = unit
+        if let index = groceryItems.firstIndex(where: { $0.id == item.id }) {
+            groceryItems[index].name = name
+            groceryItems[index].quantity = quantity
+            groceryItems[index].unit = unit
+            objectWillChange.send()
+        }
     }
     
     func togglePurchased(_ item: GroceryItem) {
-        item.isPurchased.toggle()
+        // Find the item and update it directly in the array
+        if let index = groceryItems.firstIndex(where: { $0.id == item.id }) {
+            groceryItems[index].isPurchased.toggle()
+            // Force UI update
+            objectWillChange.send()
+        }
     }
     
     func deleteItem(_ item: GroceryItem) {
@@ -62,12 +71,12 @@ class ShoppingViewModel: ObservableObject {
 }
 
 // Updated GroceryItem
-class GroceryItem: ObservableObject, Identifiable {
+struct GroceryItem: Identifiable {
     let id = UUID()
-    @Published var name: String
-    @Published var quantity: Double
-    @Published var unit: String
-    @Published var isPurchased: Bool
+    var name: String
+    var quantity: Double
+    var unit: String
+    var isPurchased: Bool
     let dateAdded: Date
     
     init(name: String, quantity: Double = 1.0, unit: String = "pieces", isPurchased: Bool = false) {

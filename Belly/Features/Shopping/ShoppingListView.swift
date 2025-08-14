@@ -10,6 +10,7 @@ import SwiftUI
 struct ShoppingListView: View {
     @StateObject private var shoppingViewModel = ShoppingViewModel()
     @State private var showingBulkAdd = false
+    @State private var animatingItems: Set<UUID> = []
     
     var body: some View {
         NavigationView {
@@ -22,7 +23,7 @@ struct ShoppingListView: View {
                 }
                 .padding()
                 
-                // Main content
+                // Main content with coordinated animations
                 ScrollView {
                     LazyVStack(spacing: 20) {
                         // TO BUY SECTION
@@ -39,9 +40,7 @@ struct ShoppingListView: View {
                                         ModernShoppingRow(
                                             item: item,
                                             onTogglePurchased: {
-                                                withAnimation(.easeInOut(duration: 0.3)) {
-                                                    shoppingViewModel.togglePurchased(item)
-                                                }
+                                                animateItemTransition(item)
                                             },
                                             onUpdate: { name, quantity, unit in
                                                 shoppingViewModel.updateItem(item, name: name, quantity: quantity, unit: unit)
@@ -56,6 +55,9 @@ struct ShoppingListView: View {
                                             insertion: .scale.combined(with: .opacity),
                                             removal: .move(edge: .bottom).combined(with: .opacity)
                                         ))
+                                        .animation(.easeInOut(duration: 0.4), value: item.isPurchased)
+                                        .scaleEffect(animatingItems.contains(item.id) ? 0.95 : 1.0)
+                                        .opacity(animatingItems.contains(item.id) ? 0.7 : 1.0)
                                     }
                                     
                                     // New item row
@@ -83,9 +85,7 @@ struct ShoppingListView: View {
                                         ModernShoppingRow(
                                             item: item,
                                             onTogglePurchased: {
-                                                withAnimation(.easeInOut(duration: 0.3)) {
-                                                    shoppingViewModel.togglePurchased(item)
-                                                }
+                                                animateItemTransition(item)
                                             },
                                             onUpdate: { name, quantity, unit in
                                                 shoppingViewModel.updateItem(item, name: name, quantity: quantity, unit: unit)
@@ -100,6 +100,9 @@ struct ShoppingListView: View {
                                             insertion: .move(edge: .top).combined(with: .opacity),
                                             removal: .scale.combined(with: .opacity)
                                         ))
+                                        .animation(.easeInOut(duration: 0.4), value: item.isPurchased)
+                                        .scaleEffect(animatingItems.contains(item.id) ? 0.95 : 1.0)
+                                        .opacity(animatingItems.contains(item.id) ? 0.7 : 1.0)
                                     }
                                 }
                             }
@@ -138,6 +141,24 @@ struct ShoppingListView: View {
                     }
                 }
             )
+        }
+    }
+    
+    // MARK: - Animation Helpers
+    
+    private func animateItemTransition(_ item: GroceryItem) {
+        // Add item to animating set
+        animatingItems.insert(item.id)
+        
+        // Start the transition animation
+        withAnimation(.easeInOut(duration: 0.4)) {
+            // Toggle the purchased state
+            shoppingViewModel.togglePurchased(item)
+        }
+        
+        // Remove from animating set after animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            animatingItems.remove(item.id)
         }
     }
 }
