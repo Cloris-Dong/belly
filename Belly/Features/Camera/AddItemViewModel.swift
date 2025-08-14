@@ -14,6 +14,7 @@ class AddItemViewModel: ObservableObject {
     @Published var detectedItems: [DetectedFood] = []
     @Published var isProcessing = false
     @Published var errorMessage: String?
+    @Published var errorType: ErrorType?
     @Published var showingCamera = false
     @Published var showingResults = false
     @Published var showingGallery = false
@@ -21,32 +22,49 @@ class AddItemViewModel: ObservableObject {
     
     private let aiManager = AIManager()
     
+    enum ErrorType {
+        case noItemsDetected
+        case networkError
+        case processingError
+        case cameraError
+    }
+    
     // MARK: - Camera Flow Management
     
     func processImage(_ image: UIImage) async {
         await MainActor.run {
             isProcessing = true
             errorMessage = nil
+            errorType = nil
             selectedImage = image
         }
         
-        do {
-            let results = await aiManager.processImage(image)
+        // Simulate different error scenarios for testing
+        let scenarios = ["success", "no_items", "network_error"]
+        let scenario = scenarios.randomElement() ?? "success"
+        
+        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        
+        await MainActor.run {
+            self.isProcessing = false
             
-            await MainActor.run {
-                detectedItems = results
-                isProcessing = false
+            switch scenario {
+            case "success":
+                self.detectedItems = [
+                    DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")
+                ]
+                self.showingResults = true
                 
-                if results.isEmpty {
-                    errorMessage = "No food items detected. Try a different photo or add manually."
-                } else {
-                    showingResults = true
-                }
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to process image: \(error.localizedDescription)"
-                isProcessing = false
+            case "no_items":
+                self.errorType = .noItemsDetected
+                self.errorMessage = "No food items detected. Try a clearer photo or add items manually."
+                
+            case "network_error":
+                self.errorType = .networkError
+                self.errorMessage = "Network connection issue. Please check your internet and try again."
+                
+            default:
+                break
             }
         }
     }
@@ -77,6 +95,7 @@ class AddItemViewModel: ObservableObject {
         detectedItems.removeAll()
         isProcessing = false
         errorMessage = nil
+        errorType = nil
         showingCamera = false
         showingResults = false
         showingGallery = false

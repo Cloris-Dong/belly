@@ -130,6 +130,11 @@ struct AddItemView: View {
                 if viewModel.hasError {
                     errorOverlay
                 }
+                
+                // Loading overlay
+                if viewModel.isProcessing {
+                    loadingOverlay
+                }
             }
             .navigationBarHidden(true)
         }
@@ -164,7 +169,22 @@ struct AddItemView: View {
             Text("Camera access is needed to detect food items. Please enable camera access in Settings.")
         }
         .alert("Error", isPresented: .constant(viewModel.hasError)) {
-            Button("OK") {
+            if viewModel.errorType == .networkError {
+                Button("Retry") {
+                    if let image = viewModel.selectedImage {
+                        Task {
+                            await viewModel.processImage(image)
+                        }
+                    }
+                }
+            }
+            
+            Button("Add Manually") {
+                showingManualEntry = true
+                viewModel.clearError()
+            }
+            
+            Button("Cancel") {
                 viewModel.clearError()
             }
         } message: {
@@ -172,6 +192,27 @@ struct AddItemView: View {
                 Text(error)
             }
         }
+    }
+    
+    // MARK: - Loading Overlay
+    
+    private var loadingOverlay: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.5)
+                .progressViewStyle(CircularProgressViewStyle(tint: .oceanBlue))
+            
+            Text("Analyzing Image...")
+                .font(.headline)
+            
+            Text("Identifying food items using AI")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(24)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(radius: 10)
     }
     
     // MARK: - Error Overlay

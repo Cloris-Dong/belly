@@ -13,6 +13,11 @@ struct AIResultsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isAddingToFridge = false
     @State private var showingSuccessAlert = false
+    @State private var showingRecipes = false
+    @State private var generatedRecipes: [Recipe] = []
+    @State private var isGeneratingRecipes = false
+    @StateObject private var aiManager = AIManager()
+    @State private var showingSuccess = false
     
     var body: some View {
         NavigationView {
@@ -58,6 +63,49 @@ struct AIResultsView: View {
                                     }
                                 )
                             }
+                            
+                            // Add Another Item Button
+                            Button("Add Another Item") {
+                                addBlankItem()
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.secondary.opacity(0.2))
+                            .cornerRadius(12)
+                            
+                            // Recipe Generation Section
+                            VStack(spacing: 12) {
+                                Divider()
+                                    .padding(.vertical)
+                                
+                                Text("Get Recipe Ideas")
+                                    .font(.headline)
+                                
+                                Text("Generate recipes using these ingredients")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                Button(action: generateRecipes) {
+                                    HStack {
+                                        if isGeneratingRecipes {
+                                            ProgressView()
+                                                .scaleEffect(0.8)
+                                        } else {
+                                            Image(systemName: "book.fill")
+                                        }
+                                        Text(isGeneratingRecipes ? "Generating..." : "Get Recipe Ideas")
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.green)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(12)
+                                }
+                                .disabled(isGeneratingRecipes)
+                            }
+                            .padding()
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(12)
                         }
                         .padding(DesignSystem.Spacing.lg)
                     }
@@ -79,6 +127,31 @@ struct AIResultsView: View {
         } message: {
             Text("\(detectedItems.count) item\(detectedItems.count == 1 ? "" : "s") added to your fridge.")
         }
+        .sheet(isPresented: $showingRecipes) {
+            RecipeModalView(recipes: generatedRecipes, isGenerating: false)
+        }
+        .overlay(
+            Group {
+                if showingSuccess {
+                    VStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.green)
+                        
+                        Text("Added to Fridge!")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(radius: 10)
+                    .scaleEffect(showingSuccess ? 1.0 : 0.5)
+                    .opacity(showingSuccess ? 1.0 : 0.0)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.6), value: showingSuccess)
+                }
+            }
+        )
     }
     
     // MARK: - Empty State View
@@ -174,6 +247,10 @@ struct AIResultsView: View {
     }
     
     private func addItemsToFridge() {
+        // Add haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        
         isAddingToFridge = true
         
         // Convert detected items to FoodItems and add to fridge
@@ -191,12 +268,38 @@ struct AIResultsView: View {
             
             // Add to fridge view model (mock data for now)
             // TODO: Integrate with real Core Data when available
+            print("Adding to fridge: \(detectedItem.name)")
         }
         
-        // Show success and dismiss
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            showingSuccessAlert = true
-            isAddingToFridge = false
+        // Show success animation
+        showSuccessAnimation()
+        
+        // Dismiss after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            dismiss()
+        }
+    }
+    
+    private func generateRecipes() {
+        isGeneratingRecipes = true
+        let ingredients = detectedItems.map { $0.name }
+        
+        Task {
+            let recipes = await aiManager.generateRecipesMock(from: ingredients)
+            
+            await MainActor.run {
+                self.generatedRecipes = recipes
+                self.isGeneratingRecipes = false
+                self.showingRecipes = true
+            }
+        }
+    }
+    
+    private func showSuccessAnimation() {
+        showingSuccess = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            showingSuccess = false
         }
     }
 }
