@@ -22,35 +22,35 @@ class AIManager: ObservableObject {
         // Return realistic mock detections based on common scenarios
         let scenarios = [
             // Single item scenarios
-            [DetectedFood(name: "Organic Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", confidence: 0.92)],
+            [DetectedFood(name: "Organic Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92)],
             
-            [DetectedFood(name: "Red Bell Pepper", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", confidence: 0.88)],
+            [DetectedFood(name: "Red Bell Pepper", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.88)],
             
-            [DetectedFood(name: "Greek Yogurt", category: "Dairy", shelfLifeDays: 14, storage: "Refrigerator", confidence: 0.94)],
+            [DetectedFood(name: "Greek Yogurt", category: "Dairy", shelfLifeDays: 14, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.94)],
             
-            [DetectedFood(name: "Chicken Breast", category: "Meat", shelfLifeDays: 5, storage: "Refrigerator", confidence: 0.89)],
+            [DetectedFood(name: "Chicken Breast", category: "Meat", shelfLifeDays: 5, storage: "Refrigerator", location: "Bottom Shelf", confidence: 0.89)],
             
             // Multiple items scenarios
             [
-                DetectedFood(name: "Fresh Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", confidence: 0.92),
-                DetectedFood(name: "Cherry Tomatoes", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", confidence: 0.88)
+                DetectedFood(name: "Fresh Spinach", category: "Vegetables", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.92),
+                DetectedFood(name: "Cherry Tomatoes", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.88)
             ],
             
             [
-                DetectedFood(name: "Milk", category: "Dairy", shelfLifeDays: 10, storage: "Refrigerator", confidence: 0.96),
-                DetectedFood(name: "Eggs", category: "Dairy", shelfLifeDays: 21, storage: "Refrigerator", confidence: 0.91),
-                DetectedFood(name: "Butter", category: "Dairy", shelfLifeDays: 30, storage: "Refrigerator", confidence: 0.87)
+                DetectedFood(name: "Milk", category: "Dairy", shelfLifeDays: 10, storage: "Refrigerator", location: "Door Shelf", confidence: 0.96),
+                DetectedFood(name: "Eggs", category: "Dairy", shelfLifeDays: 21, storage: "Refrigerator", location: "Door Bin", confidence: 0.91),
+                DetectedFood(name: "Butter", category: "Dairy", shelfLifeDays: 30, storage: "Refrigerator", location: "Door Shelf", confidence: 0.87)
             ],
             
             [
-                DetectedFood(name: "Organic Bananas", category: "Fruits", shelfLifeDays: 7, storage: "Refrigerator", confidence: 0.95),
-                DetectedFood(name: "Strawberries", category: "Fruits", shelfLifeDays: 5, storage: "Refrigerator", confidence: 0.93)
+                DetectedFood(name: "Organic Bananas", category: "Fruits", shelfLifeDays: 7, storage: "Refrigerator", location: "Top Shelf", confidence: 0.95),
+                DetectedFood(name: "Strawberries", category: "Fruits", shelfLifeDays: 5, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.93)
             ],
             
             // Edge cases
             [
-                DetectedFood(name: "Apples", category: "Fruits", shelfLifeDays: 14, storage: "Refrigerator", confidence: 0.78),
-                DetectedFood(name: "Unknown Item", category: "Other", shelfLifeDays: 7, storage: "Refrigerator", confidence: 0.45)
+                DetectedFood(name: "Apples", category: "Fruits", shelfLifeDays: 14, storage: "Refrigerator", location: "Crisper Drawer", confidence: 0.78),
+                DetectedFood(name: "Unknown Item", category: "Other", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.45)
             ],
             
             // No detection scenario

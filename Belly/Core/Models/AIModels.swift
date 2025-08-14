@@ -14,7 +14,19 @@ struct DetectedFood: Identifiable, Codable {
     var category: String
     var shelfLifeDays: Int
     var storage: String
+    var location: String // Add explicit location property
     var confidence: Double
+    
+    // MARK: - Initializer
+    
+    init(name: String, category: String, shelfLifeDays: Int, storage: String = "Refrigerator", location: String = "Middle Shelf", confidence: Double) {
+        self.name = name
+        self.category = category
+        self.shelfLifeDays = shelfLifeDays
+        self.storage = storage
+        self.location = location
+        self.confidence = confidence
+    }
     
     // Computed properties for UI
     var categoryEnum: FoodCategory {
