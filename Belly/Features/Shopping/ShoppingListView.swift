@@ -26,9 +26,25 @@ struct ShoppingListView: View {
                 // Main content with coordinated animations
                 ScrollView {
                     LazyVStack(spacing: 20) {
-                        // TO BUY SECTION
+                        // ADD NEW ITEM SECTION (Always visible)
                         VStack(alignment: .leading, spacing: 12) {
-                            if !shoppingViewModel.unpurchasedItems.isEmpty || shoppingViewModel.groceryItems.isEmpty {
+                            SectionHeader(
+                                title: "Add New Item",
+                                count: 0,
+                                color: .blue
+                            )
+                            
+                            NewItemRow { name, quantity, unit in
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    shoppingViewModel.addItem(name, quantity: quantity, unit: unit)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        // TO BUY SECTION
+                        if !shoppingViewModel.unpurchasedItems.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
                                 SectionHeader(
                                     title: "To Buy",
                                     count: shoppingViewModel.unpurchasedItems.count,
@@ -59,17 +75,10 @@ struct ShoppingListView: View {
                                         .scaleEffect(animatingItems.contains(item.id) ? 0.95 : 1.0)
                                         .opacity(animatingItems.contains(item.id) ? 0.7 : 1.0)
                                     }
-                                    
-                                    // New item row
-                                    NewItemRow { name, quantity, unit in
-                                        withAnimation(.easeInOut(duration: 0.3)) {
-                                            shoppingViewModel.addItem(name, quantity: quantity, unit: unit)
-                                        }
-                                    }
                                 }
                             }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
                         
                         // PURCHASED SECTION
                         if !shoppingViewModel.purchasedItems.isEmpty {
