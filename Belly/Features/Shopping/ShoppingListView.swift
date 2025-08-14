@@ -26,59 +26,49 @@ struct ShoppingListView: View {
                 // Main content with coordinated animations
                 ScrollView {
                     LazyVStack(spacing: 20) {
-                        // ADD NEW ITEM SECTION (Always visible)
+                        // TO BUY SECTION (Always visible with add item at bottom)
                         VStack(alignment: .leading, spacing: 12) {
                             SectionHeader(
-                                title: "Add New Item",
-                                count: 0,
+                                title: "To Buy",
+                                count: shoppingViewModel.unpurchasedItems.count,
                                 color: .blue
                             )
                             
-                            NewItemRow { name, quantity, unit in
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    shoppingViewModel.addItem(name, quantity: quantity, unit: unit)
+                            VStack(spacing: 8) {
+                                // Existing unchecked items
+                                ForEach(shoppingViewModel.unpurchasedItems) { item in
+                                    ModernShoppingRow(
+                                        item: item,
+                                        onTogglePurchased: {
+                                            animateItemTransition(item)
+                                        },
+                                        onUpdate: { name, quantity, unit in
+                                            shoppingViewModel.updateItem(item, name: name, quantity: quantity, unit: unit)
+                                        },
+                                        onDelete: {
+                                            withAnimation(.easeInOut(duration: 0.3)) {
+                                                shoppingViewModel.deleteItem(item)
+                                            }
+                                        }
+                                    )
+                                    .transition(.asymmetric(
+                                        insertion: .scale.combined(with: .opacity),
+                                        removal: .move(edge: .bottom).combined(with: .opacity)
+                                    ))
+                                    .animation(.easeInOut(duration: 0.4), value: item.isPurchased)
+                                    .scaleEffect(animatingItems.contains(item.id) ? 0.95 : 1.0)
+                                    .opacity(animatingItems.contains(item.id) ? 0.7 : 1.0)
+                                }
+                                
+                                // Add new item input (always at bottom)
+                                NewItemRow { name, quantity, unit in
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        shoppingViewModel.addItem(name, quantity: quantity, unit: unit)
+                                    }
                                 }
                             }
                         }
                         .padding(.horizontal)
-                        
-                        // TO BUY SECTION
-                        if !shoppingViewModel.unpurchasedItems.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                SectionHeader(
-                                    title: "To Buy",
-                                    count: shoppingViewModel.unpurchasedItems.count,
-                                    color: .blue
-                                )
-                                
-                                VStack(spacing: 8) {
-                                    ForEach(shoppingViewModel.unpurchasedItems) { item in
-                                        ModernShoppingRow(
-                                            item: item,
-                                            onTogglePurchased: {
-                                                animateItemTransition(item)
-                                            },
-                                            onUpdate: { name, quantity, unit in
-                                                shoppingViewModel.updateItem(item, name: name, quantity: quantity, unit: unit)
-                                            },
-                                            onDelete: {
-                                                withAnimation(.easeInOut(duration: 0.3)) {
-                                                    shoppingViewModel.deleteItem(item)
-                                                }
-                                            }
-                                        )
-                                        .transition(.asymmetric(
-                                            insertion: .scale.combined(with: .opacity),
-                                            removal: .move(edge: .bottom).combined(with: .opacity)
-                                        ))
-                                        .animation(.easeInOut(duration: 0.4), value: item.isPurchased)
-                                        .scaleEffect(animatingItems.contains(item.id) ? 0.95 : 1.0)
-                                        .opacity(animatingItems.contains(item.id) ? 0.7 : 1.0)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
                         
                         // PURCHASED SECTION
                         if !shoppingViewModel.purchasedItems.isEmpty {
