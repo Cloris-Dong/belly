@@ -185,7 +185,7 @@ struct FridgeView: View {
                 .padding(.vertical, DesignSystem.Spacing.md)
             }
             .padding(.horizontal, -DesignSystem.Spacing.lg)
-            .frame(height: 140)
+            .frame(minHeight: 160)
         }
     }
     
@@ -254,8 +254,10 @@ struct FridgeView: View {
                         }
                     }
                     .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.vertical, DesignSystem.Spacing.md)
                 }
                 .padding(.horizontal, -DesignSystem.Spacing.lg)
+                .frame(minHeight: 160)
                 
                 // Recipe Ideas Button
                 if !viewModel.expiringItems.isEmpty {
