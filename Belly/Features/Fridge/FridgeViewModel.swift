@@ -61,14 +61,21 @@ final class FridgeViewModel: ObservableObject {
     
     // MARK: - Computed Properties
     
-    /// Items expiring within 3 days, sorted by expiration date
+    /// Items that have expired, sorted by expiration date (most recently expired first)
+    var expiredItems: [FoodItem] {
+        foodItems
+            .filter { $0.isExpired }
+            .sorted { $0.expirationDate > $1.expirationDate }
+    }
+    
+    /// Items expiring within 3 days (but not expired), sorted by expiration date
     var expiringItems: [FoodItem] {
         foodItems
-            .filter { $0.isExpiringSoon || $0.isExpired }
+            .filter { $0.isExpiringSoon && !$0.isExpired }
             .sorted { $0.expirationDate < $1.expirationDate }
     }
     
-    /// Items grouped by category with counts
+    /// Items grouped by category with counts (excludes expired and expiring items)
     var itemsByCategory: [FoodCategory: [FoodItem]] {
         let allCategories = FoodCategory.allCases
         var result: [FoodCategory: [FoodItem]] = [:]
@@ -78,8 +85,9 @@ final class FridgeViewModel: ObservableObject {
             result[category] = []
         }
         
-        // Group items by category
-        for item in filteredItems {
+        // Group items by category (only fresh items)
+        let freshItems = foodItems.filter { !$0.isExpired && !$0.isExpiringSoon }
+        for item in freshItems {
             result[item.category, default: []].append(item)
         }
         
