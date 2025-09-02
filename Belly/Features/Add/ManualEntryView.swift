@@ -31,7 +31,8 @@ struct ManualEntryView: View {
                     
                     Picker("Category", selection: $selectedCategory) {
                         ForEach(FoodCategory.allCases, id: \.self) { category in
-                            Text(category.rawValue).tag(category)
+                            Text(category.emoji + "  " + category.rawValue)
+                                .tag(category)
                         }
                     }
                     .pickerStyle(MenuPickerStyle())

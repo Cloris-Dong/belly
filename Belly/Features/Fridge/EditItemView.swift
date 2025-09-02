@@ -10,6 +10,7 @@ import SwiftUI
 struct EditItemView: View {
     @Binding var item: FoodItem
     @Environment(\.dismiss) var dismiss
+    @StateObject private var locationManager = LocationManager()
     
     @State private var editedName: String
     @State private var editedCategory: FoodCategory
@@ -17,7 +18,10 @@ struct EditItemView: View {
     @State private var editedUnit: FoodUnit
     @State private var editedExpirationDate: Date
     @State private var editedZoneTag: String
+    @State private var editedStorage: String
     @State private var showingDeleteConfirmation = false
+    @State private var showingAddLocation = false
+    @State private var newLocation = ""
     
     let onSave: (ItemUpdate) -> Void
     let onDelete: () -> Void
@@ -34,6 +38,7 @@ struct EditItemView: View {
         self._editedUnit = State(initialValue: item.wrappedValue.unit)
         self._editedExpirationDate = State(initialValue: item.wrappedValue.expirationDate)
         self._editedZoneTag = State(initialValue: item.wrappedValue.zoneTag ?? "")
+        self._editedStorage = State(initialValue: item.wrappedValue.storage)
     }
     
     var body: some View {
@@ -59,11 +64,8 @@ struct EditItemView: View {
                         
                         Picker("Category", selection: $editedCategory) {
                             ForEach(FoodCategory.allCases) { category in
-                                HStack {
-                                    Text(category.emoji)
-                                    Text(category.rawValue)
-                                }
-                                .tag(category)
+                                Text(category.emoji + "  " + category.rawValue)
+                                    .tag(category)
                             }
                         }
                         .pickerStyle(.menu)
@@ -120,13 +122,21 @@ struct EditItemView: View {
                 
                 // Location Section
                 Section("Storage Location") {
-                    HStack {
-                        Image(systemName: "location.fill")
-                            .foregroundColor(.sageGreen)
-                            .frame(width: 20)
+                    Picker("Location", selection: $editedStorage) {
+                        ForEach(locationManager.allLocations, id: \.self) { location in
+                            Text(location).tag(location)
+                        }
                         
-                        TextField("Zone tag (optional)", text: $editedZoneTag)
-                            .textFieldStyle(.plain)
+                        Text("Add New Location...")
+                            .foregroundColor(.oceanBlue)
+                            .tag("add_new")
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .onChange(of: editedStorage) { newValue in
+                        if newValue == "add_new" {
+                            showingAddLocation = true
+                            editedStorage = locationManager.allLocations.first ?? "Middle Shelf"
+                        }
                     }
                 }
                 
@@ -169,6 +179,19 @@ struct EditItemView: View {
             } message: {
                 Text("Are you sure you want to remove '\(item.name)' from your fridge?")
             }
+            .alert("Add New Location", isPresented: $showingAddLocation) {
+                TextField("Location name", text: $newLocation)
+                Button("Add") {
+                    locationManager.addLocation(newLocation)
+                    editedStorage = newLocation
+                    newLocation = ""
+                }
+                Button("Cancel", role: .cancel) { 
+                    newLocation = ""
+                }
+            } message: {
+                Text("Enter a name for the new storage location")
+            }
         }
     }
     
@@ -181,7 +204,8 @@ struct EditItemView: View {
             quantity: editedQuantity != item.quantity ? editedQuantity : nil,
             unit: editedUnit != item.unit ? editedUnit : nil,
             expirationDate: editedExpirationDate != item.expirationDate ? editedExpirationDate : nil,
-            zoneTag: editedZoneTag != (item.zoneTag ?? "") ? (editedZoneTag.isEmpty ? nil : editedZoneTag) : nil
+            zoneTag: editedZoneTag != (item.zoneTag ?? "") ? (editedZoneTag.isEmpty ? nil : editedZoneTag) : nil,
+            storage: editedStorage != item.storage ? editedStorage : nil
         )
         
         onSave(updates)

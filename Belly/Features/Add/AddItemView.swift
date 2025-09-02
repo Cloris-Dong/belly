@@ -138,7 +138,7 @@ struct AddItemView: View {
             }
             .navigationBarHidden(true)
         }
-        .sheet(isPresented: $viewModel.showingCamera) {
+        .fullScreenCover(isPresented: $viewModel.showingCamera) {
             CameraView(
                 selectedImage: $viewModel.selectedImage,
                 isPresented: $viewModel.showingCamera,
@@ -148,6 +148,7 @@ struct AddItemView: View {
                     }
                 }
             )
+            .ignoresSafeArea(.all)
         }
         .sheet(isPresented: $viewModel.showingResults) {
             AIResultsView(detectedItems: $viewModel.detectedItems)

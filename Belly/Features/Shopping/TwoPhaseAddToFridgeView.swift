@@ -11,6 +11,7 @@ struct TwoPhaseAddToFridgeView: View {
     let purchasedItems: [GroceryItem]
     let onComplete: ([GroceryItem]) -> Void
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var locationManager = LocationManager()
     
     @State private var selectedItems: Set<UUID> = []
     @State private var showingConfiguration = false
@@ -31,6 +32,7 @@ struct TwoPhaseAddToFridgeView: View {
                     // Phase 2: Detailed Configuration
                     ConfigurationPhaseView(
                         selectedItems: purchasedItems.filter { selectedItems.contains($0.id) },
+                        locationManager: locationManager,
                         onComplete: { configuredItems in
                             onComplete(configuredItems)
                             dismiss()
@@ -108,15 +110,18 @@ struct SelectionPhaseView: View {
 
 struct ConfigurationPhaseView: View {
     let selectedItems: [GroceryItem]
+    let locationManager: LocationManager
     let onComplete: ([GroceryItem]) -> Void
     let onBack: () -> Void
     
     @State private var itemConfigurations: [UUID: ItemConfiguration] = [:]
+    @State private var showingAddLocation = false
+    @State private var newLocation = ""
     
     struct ItemConfiguration {
         var location: String = "Middle Shelf"
         var shelfLifeDays: Int = 7
-        var category: String = "Other"
+        var category: FoodCategory = .other
         var quantity: Double
         var unit: String
         
@@ -127,15 +132,15 @@ struct ConfigurationPhaseView: View {
             // Smart defaults based on item name
             let name = item.name.lowercased()
             if name.contains("milk") || name.contains("yogurt") || name.contains("cheese") {
-                self.category = "Dairy"
+                self.category = .dairy
                 self.location = "Middle Shelf"
                 self.shelfLifeDays = 7
             } else if name.contains("apple") || name.contains("banana") || name.contains("fruit") {
-                self.category = "Fruits"
+                self.category = .fruits
                 self.location = "Crisper Drawer"
                 self.shelfLifeDays = 7
             } else if name.contains("lettuce") || name.contains("spinach") || name.contains("vegetable") {
-                self.category = "Vegetables"
+                self.category = .vegetables
                 self.location = "Crisper Drawer"
                 self.shelfLifeDays = 5
             }
@@ -153,7 +158,11 @@ struct ConfigurationPhaseView: View {
                             configuration: Binding(
                                 get: { itemConfigurations[item.id] ?? ItemConfiguration(from: item) },
                                 set: { itemConfigurations[item.id] = $0 }
-                            )
+                            ),
+                            locationManager: locationManager,
+                            onAddLocation: {
+                                showingAddLocation = true
+                            }
                         )
                     }
                 }
@@ -189,12 +198,26 @@ struct ConfigurationPhaseView: View {
                 }
             }
         }
+        .alert("Add New Location", isPresented: $showingAddLocation) {
+            TextField("Location name", text: $newLocation)
+            Button("Add") {
+                locationManager.addLocation(newLocation)
+                newLocation = ""
+            }
+            Button("Cancel", role: .cancel) {
+                newLocation = ""
+            }
+        } message: {
+            Text("Enter a name for the new storage location")
+        }
     }
 }
 
 struct ItemConfigurationCard: View {
     let item: GroceryItem
     @Binding var configuration: ConfigurationPhaseView.ItemConfiguration
+    let locationManager: LocationManager
+    let onAddLocation: () -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -241,8 +264,9 @@ struct ItemConfigurationCard: View {
                         .foregroundColor(.secondary)
                     
                     Picker("Category", selection: $configuration.category) {
-                        ForEach(["Vegetables", "Fruits", "Dairy", "Meat", "Pantry", "Beverages", "Other"], id: \.self) { category in
-                            Text(category).tag(category)
+                        ForEach(FoodCategory.allCases, id: \.self) { category in
+                            Text(category.emoji + "  " + category.rawValue)
+                                .tag(category)
                         }
                     }
                     .pickerStyle(.menu)
@@ -256,11 +280,21 @@ struct ItemConfigurationCard: View {
                         .foregroundColor(.secondary)
                     
                     Picker("Location", selection: $configuration.location) {
-                        ForEach(["Top Shelf", "Middle Shelf", "Bottom Shelf", "Crisper Drawer", "Door Shelf"], id: \.self) { location in
+                        ForEach(locationManager.allLocations, id: \.self) { location in
                             Text(location).tag(location)
                         }
+                        
+                        Text("Add New Location...")
+                            .foregroundColor(.oceanBlue)
+                            .tag("add_new")
                     }
                     .pickerStyle(.menu)
+                    .onChange(of: configuration.location) { newValue in
+                        if newValue == "add_new" {
+                            onAddLocation()
+                            configuration.location = locationManager.allLocations.first ?? "Middle Shelf"
+                        }
+                    }
                 }
             }
         }

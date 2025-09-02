@@ -73,7 +73,7 @@ struct AddPurchasedItemsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingCamera) {
+        .fullScreenCover(isPresented: $showingCamera) {
             // Integrate with existing camera flow
             AddItemView()
         }

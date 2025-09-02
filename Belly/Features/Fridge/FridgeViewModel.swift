@@ -198,6 +198,7 @@ final class FridgeViewModel: ObservableObject {
         if let unit = updates.unit { updatedItem.unit = unit }
         if let expirationDate = updates.expirationDate { updatedItem.expirationDate = expirationDate }
         if let zoneTag = updates.zoneTag { updatedItem.zoneTag = zoneTag }
+        if let storage = updates.storage { updatedItem.storage = storage }
         
         foodItems[index] = updatedItem
         saveChanges()
@@ -369,6 +370,7 @@ struct ItemUpdate {
     let unit: FoodUnit?
     let expirationDate: Date?
     let zoneTag: String?
+    let storage: String?
     
     init(
         name: String? = nil,
@@ -376,7 +378,8 @@ struct ItemUpdate {
         quantity: Double? = nil,
         unit: FoodUnit? = nil,
         expirationDate: Date? = nil,
-        zoneTag: String? = nil
+        zoneTag: String? = nil,
+        storage: String? = nil
     ) {
         self.name = name
         self.category = category
@@ -384,5 +387,6 @@ struct ItemUpdate {
         self.unit = unit
         self.expirationDate = expirationDate
         self.zoneTag = zoneTag
+        self.storage = storage
     }
 }

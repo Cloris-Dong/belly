@@ -357,7 +357,8 @@ struct DetectedItemCard: View {
                     
                     Picker("Category", selection: $item.category) {
                         ForEach(FoodCategory.allCases, id: \.rawValue) { category in
-                            Text(category.rawValue).tag(category.rawValue)
+                            Text(category.emoji + "  " + category.rawValue)
+                                .tag(category.rawValue)
                         }
                     }
                     .pickerStyle(MenuPickerStyle())

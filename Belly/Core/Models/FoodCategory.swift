@@ -34,7 +34,7 @@ enum FoodCategory: String, CaseIterable, Identifiable {
         case .pantry: return "🥫"
         case .frozen: return "🧊"
         case .leftovers: return "🍽️"
-        case .condiments: return "🍯"
+        case .condiments: return "🧂"
         case .other: return "📦"
         }
     }
