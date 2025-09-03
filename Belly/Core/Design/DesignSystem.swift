@@ -60,19 +60,24 @@ struct DesignSystem {
     struct Typography {
         // MARK: - Font Weights
         
-        /// Regular weight font
+        /// Regular weight font - Cute and friendly
         static func regular(size: CGFloat) -> Font {
-            return .custom("SF Pro Text", size: size).weight(.regular)
+            return .custom("SF Pro Rounded", size: size).weight(.regular)
         }
         
-        /// Semibold weight font
+        /// Semibold weight font - Cute and friendly
         static func semibold(size: CGFloat) -> Font {
-            return .custom("SF Pro Text", size: size).weight(.semibold)
+            return .custom("SF Pro Rounded", size: size).weight(.semibold)
         }
         
-        /// Bold weight font
+        /// Bold weight font - Cute and friendly
         static func bold(size: CGFloat) -> Font {
-            return .custom("SF Pro Text", size: size).weight(.bold)
+            return .custom("SF Pro Rounded", size: size).weight(.bold)
+        }
+        
+        /// Cute and playful font for special elements
+        static func cute(size: CGFloat) -> Font {
+            return .custom("SF Pro Rounded", size: size).weight(.medium)
         }
         
         // MARK: - Font Sizes
@@ -140,23 +145,23 @@ struct DesignSystem {
     // MARK: - Corner Radius
     
     struct CornerRadius {
-        /// Extra small radius (4pt)
-        static let xs: CGFloat = 4
+        /// Extra small radius (8pt) - More rounded for cuteness
+        static let xs: CGFloat = 8
         
-        /// Small radius (6pt)
-        static let sm: CGFloat = 6
+        /// Small radius (12pt) - More rounded for cuteness
+        static let sm: CGFloat = 12
         
-        /// Medium radius (8pt)
-        static let md: CGFloat = 8
+        /// Medium radius (16pt) - More rounded for cuteness
+        static let md: CGFloat = 16
         
-        /// Large radius (12pt)
-        static let lg: CGFloat = 12
+        /// Large radius (20pt) - More rounded for cuteness
+        static let lg: CGFloat = 20
         
-        /// Extra large radius (16pt)
-        static let xl: CGFloat = 16
+        /// Extra large radius (24pt) - More rounded for cuteness
+        static let xl: CGFloat = 24
         
-        /// Extra extra large radius (20pt)
-        static let xxl: CGFloat = 20
+        /// Extra extra large radius (28pt) - More rounded for cuteness
+        static let xxl: CGFloat = 28
         
         // MARK: - Semantic Corner Radius
         
@@ -283,6 +288,35 @@ struct DesignSystem {
         /// Navigation bar height (44pt)
         static let navigationBarHeight: CGFloat = 44
     }
+    
+    // MARK: - Cute Design Elements
+    
+    struct Cute {
+        /// Soft shadow for cards
+        static let softShadow = Shadow(
+            color: Color.black.opacity(0.08),
+            radius: 8,
+            x: 0,
+            y: 4
+        )
+        
+        /// Extra soft shadow for subtle elements
+        static let extraSoftShadow = Shadow(
+            color: Color.black.opacity(0.04),
+            radius: 6,
+            x: 0,
+            y: 2
+        )
+        
+        /// Cute button padding
+        static let buttonPadding: CGFloat = 20
+        
+        /// Cute card padding
+        static let cardPadding: CGFloat = 20
+        
+        /// Cute spacing between elements
+        static let elementSpacing: CGFloat = 16
+    }
 }
 
 // MARK: - View Modifiers
@@ -342,5 +376,61 @@ extension View {
             .padding(.vertical, DesignSystem.Spacing.xs)
             .background(backgroundColor)
             .cornerRadius(DesignSystem.CornerRadius.badge)
+    }
+    
+    /// Apply cute card style with soft shadows
+    func cuteCardStyle() -> some View {
+        self
+            .background(Color.cardBackground)
+            .cornerRadius(DesignSystem.CornerRadius.card)
+            .shadow(
+                color: DesignSystem.Cute.softShadow.color,
+                radius: DesignSystem.Cute.softShadow.radius,
+                x: DesignSystem.Cute.softShadow.x,
+                y: DesignSystem.Cute.softShadow.y
+            )
+    }
+    
+    /// Apply cute button style
+    func cuteButtonStyle(
+        backgroundColor: Color = .oceanBlue,
+        foregroundColor: Color = .white
+    ) -> some View {
+        self
+            .frame(height: DesignSystem.Layout.buttonHeight)
+            .background(backgroundColor)
+            .foregroundColor(foregroundColor)
+            .cornerRadius(DesignSystem.CornerRadius.button)
+            .font(DesignSystem.Typography.button)
+            .shadow(
+                color: DesignSystem.Cute.extraSoftShadow.color,
+                radius: DesignSystem.Cute.extraSoftShadow.radius,
+                x: DesignSystem.Cute.extraSoftShadow.x,
+                y: DesignSystem.Cute.extraSoftShadow.y
+            )
+    }
+    
+    /// Apply cute dropdown style with proper text visibility
+    func cuteDropdownStyle() -> some View {
+        self
+            .foregroundColor(Color.dropdownText)
+            .background(Color.dropdownBackground)
+            .cornerRadius(DesignSystem.CornerRadius.sm)
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .stroke(Color.formBorder, lineWidth: 1)
+            )
+    }
+    
+    /// Apply cute form field style
+    func cuteFormFieldStyle() -> some View {
+        self
+            .foregroundColor(Color.formText)
+            .background(Color.dropdownBackground)
+            .cornerRadius(DesignSystem.CornerRadius.sm)
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .stroke(Color.formBorder, lineWidth: 1)
+            )
     }
 }

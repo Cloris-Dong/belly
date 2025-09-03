@@ -16,11 +16,16 @@ struct NewItemRow: View {
     @FocusState private var isNameFocused: Bool
     @FocusState private var isQuantityFocused: Bool
     
+    // Computed property to check if any field is focused
+    var isAnyFieldFocused: Bool {
+        isNameFocused || isQuantityFocused
+    }
+    
     var body: some View {
         HStack(spacing: 12) {
             // Empty circle
             Image(systemName: "plus.circle")
-                .foregroundColor(.blue)
+                .foregroundColor(.primaryText)
                 .font(.title3)
             
             VStack(spacing: 8) {
@@ -29,7 +34,7 @@ struct NewItemRow: View {
                     .focused($isNameFocused)
                     .textFieldStyle(.plain)
                     .font(.body)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.primaryText)
                     .onSubmit {
                         addItem()
                     }
@@ -54,7 +59,7 @@ struct NewItemRow: View {
                                     .fill(Color(.systemGray6))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6)
-                                            .stroke(isQuantityFocused ? Color.blue : Color.clear, lineWidth: 1)
+                                            .stroke(isQuantityFocused ? Color.primaryText : Color.clear, lineWidth: 1)
                                     )
                             )
                     }
@@ -75,7 +80,7 @@ struct NewItemRow: View {
                             HStack(spacing: 4) {
                                 Text(newUnit)
                                     .font(.body)
-                                    .foregroundColor(.primary)
+                                    .foregroundColor(.primaryText)
                                 
                                 Image(systemName: "chevron.down")
                                     .font(.caption)
@@ -98,10 +103,16 @@ struct NewItemRow: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [8, 4]))
-                .foregroundColor(.blue.opacity(0.3))
+                .foregroundColor(.primaryText.opacity(0.3))
         )
         .onTapGesture {
             isNameFocused = true
+        }
+        .onChange(of: isAnyFieldFocused) { isFocused in
+            // When focus is lost and there's text to add, automatically add the item
+            if !isFocused && !newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                addItem()
+            }
         }
     }
     

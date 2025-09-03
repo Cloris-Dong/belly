@@ -19,32 +19,33 @@ struct AddItemView: View {
     var body: some View {
         NavigationView {
             ZStack {
+                // Navigation title
+                VStack {
+                    Text("Add Items")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primaryText)
+                        .padding(.top, DesignSystem.Spacing.xl)
+                    
+                    Spacer()
+                }
+                .zIndex(1)
+                
+                // Background
                 // Background
                 Color.appBackground
                     .ignoresSafeArea()
                 
                 VStack(spacing: DesignSystem.Spacing.xl) {
-                    // Header
+                    // Top spacing to center content better
+                    Spacer()
+                    
+                    // Header - moved to center
                     VStack(spacing: DesignSystem.Spacing.md) {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 60))
                             .foregroundColor(.oceanBlue)
-                        
-                        VStack(spacing: DesignSystem.Spacing.sm) {
-                            Text("Add Items")
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.primary)
-                            
-                            Text("Take a photo to automatically detect food items")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
                     }
-                    .padding(.top, DesignSystem.Spacing.xxl)
-                    
-                    Spacer()
                     
                     // Action buttons
                     VStack(spacing: DesignSystem.Spacing.lg) {
@@ -96,14 +97,12 @@ struct AddItemView: View {
                     }
                     .padding(.horizontal, DesignSystem.Spacing.lg)
                     
-                    Spacer()
-                    
                     // Tips section
                     VStack(spacing: DesignSystem.Spacing.md) {
                         Text("Tips for better detection:")
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.primaryText)
                         
                         VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                             TipRow(icon: "light.max", text: "Ensure good lighting")
@@ -123,7 +122,9 @@ struct AddItemView: View {
                             )
                     )
                     .padding(.horizontal, DesignSystem.Spacing.lg)
-                    .padding(.bottom, DesignSystem.Spacing.lg)
+                    
+                    // Bottom spacing to center content better
+                    Spacer()
                 }
                 
                 // Error overlay
@@ -227,7 +228,7 @@ struct AddItemView: View {
             Text("Something went wrong")
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundColor(.primary)
+                .foregroundColor(.primaryText)
             
             if let error = viewModel.errorMessage {
                 Text(error)

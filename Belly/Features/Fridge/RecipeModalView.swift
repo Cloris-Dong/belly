@@ -48,7 +48,7 @@ struct RecipeModalView: View {
             
             Text("Generating recipe ideas...")
                 .font(.headline)
-                .foregroundColor(.primary)
+                .foregroundColor(.primaryText)
             
             Text("Finding delicious ways to use your expiring items")
                 .font(.subheadline)
@@ -69,7 +69,7 @@ struct RecipeModalView: View {
             Text("No Recipes Found")
                 .font(.title2)
                 .fontWeight(.semibold)
-                .foregroundColor(.primary)
+                .foregroundColor(.primaryText)
             
             Text("We couldn't find recipes matching your current ingredients. Try adding more items to your fridge!")
                 .font(.subheadline)
@@ -145,7 +145,7 @@ struct RecipeCard: View {
                     Text(recipe.title)
                         .font(.headline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                     
                     HStack(spacing: DesignSystem.Spacing.sm) {
                         // Category
@@ -305,7 +305,7 @@ struct RecipeCard: View {
                         
                         Text(ingredient)
                             .font(.subheadline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.primaryText)
                         
                         Spacer()
                     }
@@ -330,7 +330,7 @@ struct RecipeCard: View {
                         
                         Text(instruction)
                             .font(.subheadline)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.primaryText)
                         
                         Spacer()
                     }

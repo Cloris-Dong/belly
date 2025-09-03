@@ -23,8 +23,8 @@ struct ModernShoppingRow: View {
         HStack(spacing: 12) {
             // Checkbox
             Button(action: onTogglePurchased) {
-                Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(item.isPurchased ? .green : .secondary)
+                                    Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(item.isPurchased ? .primaryText : .secondary)
                     .font(.title3)
             }
             .buttonStyle(PlainButtonStyle())
@@ -37,7 +37,7 @@ struct ModernShoppingRow: View {
                     .textFieldStyle(.plain)
                     .font(.body)
                     .strikethrough(item.isPurchased)
-                    .foregroundColor(item.isPurchased ? .secondary : .primary)
+                    .foregroundColor(item.isPurchased ? .secondary : .primaryText)
                     .onSubmit {
                         updateItem()
                     }
@@ -67,7 +67,7 @@ struct ModernShoppingRow: View {
                                     .fill(Color(.systemGray6))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6)
-                                            .stroke(isQuantityFocused ? Color.blue : Color.clear, lineWidth: 1)
+                                            .stroke(isQuantityFocused ? Color.primaryText : Color.clear, lineWidth: 1)
                                     )
                             )
                             .onSubmit {
@@ -97,7 +97,7 @@ struct ModernShoppingRow: View {
                             HStack(spacing: 4) {
                                 Text(editedUnit)
                                     .font(.body)
-                                    .foregroundColor(.primary)
+                                    .foregroundColor(.primaryText)
                                 
                                 Image(systemName: "chevron.down")
                                     .font(.caption)

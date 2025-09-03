@@ -53,11 +53,11 @@ class AIManager: ObservableObject {
                 DetectedFood(name: "Unknown Item", category: "Other", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.45, quantity: 1.0, unit: "pieces")
             ],
             
-            // No detection scenario
-            []
+            // DISABLED: No detection scenario - always return at least one item
+            [DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")]
         ]
         
-        return scenarios.randomElement() ?? []
+        return scenarios.randomElement() ?? [DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")]
     }
     
     // MARK: - Mock Recipe Generation

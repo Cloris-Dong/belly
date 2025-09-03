@@ -15,13 +15,13 @@ struct ShoppingListView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Simple header
-                HStack {
-                    Text("Shopping List")
-                        .font(.largeTitle.weight(.bold))
-                    Spacer()
-                }
-                .padding()
+                // Navigation title
+                Text("Shopping List")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primaryText)
+                    .padding(.top, DesignSystem.Spacing.xl)
+                    .padding(.bottom, DesignSystem.Spacing.md)
                 
                 // Main content with coordinated animations
                 ScrollView {
@@ -31,7 +31,7 @@ struct ShoppingListView: View {
                             SectionHeader(
                                 title: "To Buy",
                                 count: shoppingViewModel.unpurchasedItems.count,
-                                color: .blue
+                                color: .primaryText
                             )
                             
                             VStack(spacing: 8) {
@@ -69,15 +69,21 @@ struct ShoppingListView: View {
                             }
                         }
                         .padding(.horizontal)
+                        .padding(.vertical, DesignSystem.Spacing.md)
+                        .background(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
+                                .fill(Color.lightSageGreen)
+                        )
+                        .padding(.horizontal)
                         
                         // PURCHASED SECTION
                         if !shoppingViewModel.purchasedItems.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                SectionHeader(
-                                    title: "Purchased",
-                                    count: shoppingViewModel.purchasedItems.count,
-                                    color: .green
-                                )
+                                                            SectionHeader(
+                                title: "Purchased",
+                                count: shoppingViewModel.purchasedItems.count,
+                                color: .primaryText
+                            )
                                 
                                 VStack(spacing: 8) {
                                     ForEach(shoppingViewModel.purchasedItems) { item in
@@ -114,21 +120,25 @@ struct ShoppingListView: View {
                 // Bulk add button (only when purchased items exist)
                 if !shoppingViewModel.purchasedItems.isEmpty {
                     VStack {
-                        Divider()
                         Button("Add \(shoppingViewModel.purchasedItems.count) Items to Fridge") {
                             showingBulkAdd = true
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
+                        .background(Color.oceanBlue)
                         .foregroundColor(.white)
                         .cornerRadius(12)
                         .padding()
                     }
-                    .background(Color(.systemBackground))
+                    .background(Color.appBackground)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .animation(.easeInOut(duration: 0.3), value: shoppingViewModel.purchasedItems.isEmpty)
                 }
+            }
+            .background(Color.appBackground)
+            .onTapGesture {
+                // Dismiss keyboard when tapping outside text fields
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             }
         }
         .sheet(isPresented: $showingBulkAdd) {

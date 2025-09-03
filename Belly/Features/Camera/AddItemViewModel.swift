@@ -39,9 +39,9 @@ class AddItemViewModel: ObservableObject {
             selectedImage = image
         }
         
-        // Simulate different error scenarios for testing
-        let scenarios = ["success", "no_items", "network_error"]
-        let scenario = scenarios.randomElement() ?? "success"
+        // DISABLED: Network check and unfound food item error messages for now
+        // Always return success scenario
+        let scenario = "success"
         
         try? await Task.sleep(nanoseconds: 2_000_000_000)
         
@@ -56,12 +56,18 @@ class AddItemViewModel: ObservableObject {
                 self.showingResults = true
                 
             case "no_items":
-                self.errorType = .noItemsDetected
-                self.errorMessage = "No food items detected. Try a clearer photo or add items manually."
+                // DISABLED: No items detected error
+                self.detectedItems = [
+                    DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")
+                ]
+                self.showingResults = true
                 
             case "network_error":
-                self.errorType = .networkError
-                self.errorMessage = "Network connection issue. Please check your internet and try again."
+                // DISABLED: Network error - always return success
+                self.detectedItems = [
+                    DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")
+                ]
+                self.showingResults = true
                 
             default:
                 break

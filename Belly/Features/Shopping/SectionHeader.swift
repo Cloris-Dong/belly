@@ -16,7 +16,7 @@ struct SectionHeader: View {
         HStack {
             Text(title)
                 .font(.title2.weight(.semibold))
-                .foregroundColor(.primary)
+                .foregroundColor(.primaryText)
             
             Text("(\(count))")
                 .font(.title2)

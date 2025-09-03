@@ -38,15 +38,19 @@ struct ContentView: View {
                 .tag(2)
         }
         .accentColor(.oceanBlue)
+        .background(Color.appBackground)
         .onAppear {
             setupTabBarAppearance()
+        }
+        .safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: 8)
         }
     }
     
     private func setupTabBarAppearance() {
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = UIColor.systemBackground
+        tabBarAppearance.backgroundColor = UIColor(Color.appBackground)
         
         // Configure selected tab item
         tabBarAppearance.stackedLayoutAppearance.selected.iconColor = UIColor(Color.oceanBlue)

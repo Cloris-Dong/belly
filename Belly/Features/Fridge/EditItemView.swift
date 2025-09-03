@@ -43,133 +43,261 @@ struct EditItemView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                // Basic Information Section
-                Section("Item Details") {
-                    // Name field
-                    HStack {
-                        Image(systemName: "tag.fill")
-                            .foregroundColor(.oceanBlue)
-                            .frame(width: 20)
-                        
-                        TextField("Item name", text: $editedName)
-                            .textFieldStyle(.plain)
-                    }
-                    
-                    // Category picker
-                    HStack {
-                        Image(systemName: "folder.fill")
-                            .foregroundColor(.oceanBlue)
-                            .frame(width: 20)
-                        
-                        Picker("Category", selection: $editedCategory) {
-                            ForEach(FoodCategory.allCases) { category in
-                                Text(category.emoji + "  " + category.rawValue)
-                                    .tag(category)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                    }
-                    
-                    // Quantity and unit
-                    HStack {
-                        Image(systemName: "number.square.fill")
-                            .foregroundColor(.oceanBlue)
-                            .frame(width: 20)
-                        
-                        TextField("Quantity", value: $editedQuantity, format: .number)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.plain)
-                            .frame(maxWidth: 80)
-                        
-                        Picker("Unit", selection: $editedUnit) {
-                            ForEach(FoodUnit.allCases) { unit in
-                                Text(unit.displayName).tag(unit)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                    }
-                }
-                
-                // Expiration Section
-                Section("Expiration") {
-                    HStack {
-                        Image(systemName: "calendar.badge.clock")
-                            .foregroundColor(.warmAmber)
-                            .frame(width: 20)
-                        
-                        DatePicker(
-                            "Expires on",
-                            selection: $editedExpirationDate,
-                            displayedComponents: .date
-                        )
-                        .datePickerStyle(.compact)
-                    }
-                    
-                    // Expiration status indicator
-                    HStack {
-                        Image(systemName: expirationStatusIcon)
-                            .foregroundColor(expirationStatusColor)
-                            .frame(width: 20)
-                        
-                        Text(expirationStatusText)
-                            .foregroundColor(expirationStatusColor)
-                            .font(.caption)
-                        
-                        Spacer()
-                    }
-                }
-                
-                // Location Section
-                Section("Storage Location") {
-                    Picker("Location", selection: $editedStorage) {
-                        ForEach(locationManager.allLocations, id: \.self) { location in
-                            Text(location).tag(location)
-                        }
-                        
-                        Text("Add New Location...")
-                            .foregroundColor(.oceanBlue)
-                            .tag("add_new")
-                    }
-                    .pickerStyle(MenuPickerStyle())
-                    .onChange(of: editedStorage) { newValue in
-                        if newValue == "add_new" {
-                            showingAddLocation = true
-                            editedStorage = locationManager.allLocations.first ?? "Middle Shelf"
-                        }
-                    }
-                }
-                
-                // Actions Section
-                Section {
+            VStack(spacing: 0) {
+                // Header Bar
+                HStack {
                     Button(action: {
-                        showingDeleteConfirmation = true
-                    }) {
-                        HStack {
-                            Image(systemName: "trash.fill")
-                            Text("Remove Item")
-                        }
-                        .foregroundColor(.softCoral)
-                    }
-                }
-            }
-            .navigationTitle("Edit Item")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
                         dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.gray)
                     }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    
+                    Spacer()
+                    
+                    Text("Edit Item")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primaryText)
+                    
+                    Spacer()
+                    
+                    Button(action: {
                         saveChanges()
+                    }) {
+                        Image(systemName: "checkmark")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
                     }
-                    .fontWeight(.semibold)
                     .disabled(!isFormValid)
                 }
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.vertical, DesignSystem.Spacing.xl)
+                .background(
+                    Color.appBackground
+                        .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
+                )
+                
+                // Main Content
+                ScrollView {
+                    VStack(spacing: DesignSystem.Spacing.lg) {
+                        // Item Card
+                        VStack(spacing: DesignSystem.Spacing.lg) {
+                            // Item name
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Food Name")
+                                    .font(.subheadline)
+                                    .foregroundColor(.primaryText)
+                                
+                                HStack {
+                                    Image(systemName: "tag.fill")
+                                        .foregroundColor(.oceanBlue)
+                                        .frame(width: 20)
+                                    
+                                    TextField("Item name", text: $editedName)
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.primaryText)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color(.systemGray6))
+                                        )
+                                }
+                            }
+                            
+                            // Category section
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Category")
+                                    .font(.subheadline)
+                                    .foregroundColor(.primaryText)
+                                
+                                Button(action: {
+                                    // The picker will automatically show when tapped
+                                }) {
+                                    HStack {
+                                        Image(systemName: "folder.fill")
+                                            .foregroundColor(.oceanBlue)
+                                            .frame(width: 20)
+                                        
+                                        Picker("Category", selection: $editedCategory) {
+                                            ForEach(FoodCategory.allCases) { category in
+                                                Text(category.emoji + "  " + category.rawValue)
+                                                    .tag(category)
+                                            }
+                                        }
+                                        .pickerStyle(.menu)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color(.systemGray6))
+                                        )
+                                    }
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            
+                            // Quantity section
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Quantity")
+                                    .font(.subheadline)
+                                    .foregroundColor(.primaryText)
+                                
+                                HStack {
+                                    Image(systemName: "number.square.fill")
+                                        .foregroundColor(.oceanBlue)
+                                        .frame(width: 20)
+                                    
+                                    TextField("Quantity", value: $editedQuantity, format: .number)
+                                        .keyboardType(.decimalPad)
+                                        .multilineTextAlignment(.center)
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.oceanBlue)
+                                        .textFieldStyle(PlainTextFieldStyle())
+                                        .frame(width: 100, alignment: .center)
+                                        .frame(height: 40)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(.white)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                                )
+                                        )
+                                        .layoutPriority(1)
+                                    
+                                    Picker("Unit", selection: $editedUnit) {
+                                        ForEach(FoodUnit.allCases) { unit in
+                                            Text(unit.displayName).tag(unit)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .font(.caption)
+                                    .frame(minWidth: 80)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemGray6))
+                                    )
+                                }
+                            }
+                            
+                            // Expiration section
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Expiration")
+                                    .font(.subheadline)
+                                    .foregroundColor(.primaryText)
+                                
+                                HStack {
+                                    Image(systemName: "calendar.badge.clock")
+                                        .foregroundColor(.warmAmber)
+                                        .frame(width: 20)
+                                    
+                                    DatePicker(
+                                        "Expires on",
+                                        selection: $editedExpirationDate,
+                                        displayedComponents: .date
+                                    )
+                                    .datePickerStyle(.compact)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemGray6))
+                                    )
+                                }
+                                
+                                // Expiration status indicator
+                                HStack {
+                                    Image(systemName: expirationStatusIcon)
+                                        .foregroundColor(expirationStatusColor)
+                                        .frame(width: 20)
+                                    
+                                    Text(expirationStatusText)
+                                        .foregroundColor(expirationStatusColor)
+                                        .font(.caption)
+                                    
+                                    Spacer()
+                                }
+                            }
+                            
+                            // Location section
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Location")
+                                    .font(.subheadline)
+                                    .foregroundColor(.primaryText)
+                                
+                                Picker("Location", selection: $editedStorage) {
+                                    ForEach(locationManager.allLocations, id: \.self) { location in
+                                        Text(location).tag(location)
+                                    }
+                                    
+                                    Text("Add New Location...")
+                                        .foregroundColor(.oceanBlue)
+                                        .tag("add_new")
+                                }
+                                .pickerStyle(MenuPickerStyle())
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color(.systemGray6))
+                                )
+                                .cuteDropdownStyle()
+                                .onChange(of: editedStorage) { newValue in
+                                    if newValue == "add_new" {
+                                        showingAddLocation = true
+                                        editedStorage = locationManager.allLocations.first ?? "Middle Shelf"
+                                    }
+                                }
+                            }
+                        }
+                        .padding(DesignSystem.Spacing.lg)
+                        .background(
+                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
+                                .fill(Color(.systemBackground))
+                                .shadow(
+                                    color: Color.black.opacity(0.1),
+                                    radius: 4,
+                                    x: 0,
+                                    y: 2
+                                )
+                        )
+                        
+                        // Circular Remove Item Button
+                        Button(action: {
+                            showingDeleteConfirmation = true
+                        }) {
+                            Image(systemName: "trash.fill")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(width: 56, height: 56)
+                                .background(
+                                    Circle()
+                                        .fill(Color.softCoral)
+                                )
+                        }
+                        .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
+                    }
+                    .padding(DesignSystem.Spacing.lg)
+                }
+                
+                Spacer()
             }
+            .background(Color.appBackground)
+            .navigationBarHidden(true)
             .alert("Remove Item", isPresented: $showingDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Remove", role: .destructive) {

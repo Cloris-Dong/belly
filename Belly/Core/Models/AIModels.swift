@@ -21,6 +21,13 @@ struct DetectedFood: Identifiable, Codable {
     var quantity: Double = 1.0
     var unit: String = "pieces"
     
+    // Computed expiration date based on shelf life
+    var expirationDate: Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        return calendar.date(byAdding: .day, value: shelfLifeDays, to: today) ?? today
+    }
+    
     // MARK: - Initializer
     
     init(name: String, category: String, shelfLifeDays: Int, storage: String = "Refrigerator", location: String = "Middle Shelf", confidence: Double, quantity: Double = 1.0, unit: String = "pieces") {

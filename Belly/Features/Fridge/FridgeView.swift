@@ -21,6 +21,47 @@ struct FridgeView: View {
         NavigationView {
             ScrollView {
                 LazyVStack(spacing: DesignSystem.Spacing.xl) {
+                    // Custom header - styled like shopping page
+                    ZStack {
+                        // Centered title
+                        Text("Fridge")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primaryText)
+                            .frame(maxWidth: .infinity)
+                        
+                        // Selection button on the right
+                        HStack {
+                            Spacer()
+                            
+                            if !viewModel.foodItems.isEmpty {
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        toggleSelectionMode()
+                                    }
+                                }) {
+                                    Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checklist")
+                                        .font(.title3)
+                                        .foregroundColor(.oceanBlue)
+                                        .frame(width: 36, height: 36)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                                                .fill(Color(.systemBackground).opacity(0.2))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                                                        .stroke(Color(.systemGray5).opacity(0.3), lineWidth: 0.5)
+                                                )
+                                        )
+                                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.top, DesignSystem.Spacing.xl)
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.bottom, DesignSystem.Spacing.md)
+                    
                     // Expired Section (if any expired items exist)
                     if !viewModel.expiredItems.isEmpty {
                         expiredSection
@@ -36,18 +77,12 @@ struct FridgeView: View {
                 .padding(.top, DesignSystem.Spacing.sm)
             }
             .background(Color.appBackground)
-            .navigationTitle("Fridge")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if !viewModel.foodItems.isEmpty {
-                        Button(isSelectionMode ? "Done" : "Select") {
-                            toggleSelectionMode()
-                        }
-                        .foregroundColor(.oceanBlue)
-                    }
-                }
-            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.appBackground, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .navigationBarBackButtonHidden()
+
+
             .refreshable {
                 viewModel.refresh()
             }
@@ -135,7 +170,7 @@ struct FridgeView: View {
                     Text("Expired")
                         .font(.title2)
                         .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                     
                     Text("\(viewModel.expiredItemsCount) items need to be removed")
                         .font(.caption)
@@ -218,7 +253,7 @@ struct FridgeView: View {
                     Text("Expiring Soon")
                         .font(.title2)
                         .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                     
                     Text("\(viewModel.expiringItemsCount) items need attention")
                         .font(.caption)
@@ -348,7 +383,7 @@ struct FridgeView: View {
                 Text("Food Categories")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.primaryText)
                 
                 Spacer()
                 
@@ -436,7 +471,7 @@ struct FridgeView: View {
                 Text("\(selectedItems.count) selected")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.primaryText)
                 
                 Spacer()
                 
@@ -451,7 +486,7 @@ struct FridgeView: View {
             }
             .padding(.horizontal, DesignSystem.Spacing.lg)
             .padding(.vertical, DesignSystem.Spacing.lg)
-            .background(Color(.systemBackground))
+            .background(Color.cardBackground)
         }
     }
 }
@@ -485,7 +520,7 @@ struct ExpiringItemCard: View {
                     Text(item.name)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     
@@ -538,7 +573,7 @@ struct ExpiringItemCard: View {
         .frame(width: 180, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
-                .fill(Color(.systemBackground))
+                .fill(Color.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
                         .stroke(isSelected ? Color.oceanBlue : Color.clear, lineWidth: 2)
@@ -629,7 +664,7 @@ struct ExpiredItemCard: View {
                     Text(item.name)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     
@@ -682,7 +717,7 @@ struct ExpiredItemCard: View {
         .frame(width: 180, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
-                .fill(Color(.systemBackground))
+                .fill(Color.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
                         .stroke(isSelected ? Color.red : Color.clear, lineWidth: 2)
@@ -752,7 +787,7 @@ struct CategorySection: View {
                         Text(category.rawValue)
                             .font(.headline)
                             .fontWeight(.medium)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.primaryText)
                         
                         Text("(\(itemCount))")
                             .font(.subheadline)
@@ -775,21 +810,25 @@ struct CategorySection: View {
                 if items.isEmpty {
                     categoryEmptyState
                 } else {
-                    LazyVGrid(columns: [
-                        GridItem(.flexible(), spacing: DesignSystem.Spacing.sm),
-                        GridItem(.flexible(), spacing: DesignSystem.Spacing.sm)
-                    ], spacing: DesignSystem.Spacing.sm) {
-                        ForEach(items) { item in
-                            CategoryItemCard(
-                                item: item,
-                                isSelectionMode: isSelectionMode,
-                                isSelected: selectedItems.contains(item.id),
-                                onEdit: onEditItem,
-                                onRemove: onRemoveItem,
-                                onToggleSelection: { onToggleSelection(item) }
-                            )
+                    // Horizontal scroll of category items (same as expired/expiring sections)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: DesignSystem.Spacing.lg) {
+                            ForEach(items) { item in
+                                CategoryItemCard(
+                                    item: item,
+                                    isSelectionMode: isSelectionMode,
+                                    isSelected: selectedItems.contains(item.id),
+                                    onEdit: onEditItem,
+                                    onRemove: onRemoveItem,
+                                    onToggleSelection: { onToggleSelection(item) }
+                                )
+                            }
                         }
+                        .padding(.horizontal, DesignSystem.Spacing.lg)
+                        .padding(.vertical, DesignSystem.Spacing.md)
                     }
+                    .padding(.horizontal, -DesignSystem.Spacing.lg)
+                    .frame(minHeight: 160)
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
@@ -797,7 +836,7 @@ struct CategorySection: View {
         .padding(DesignSystem.Spacing.lg)
         .background(
             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
-                .fill(Color(.secondarySystemBackground))
+                .fill(Color.lightSageGreen)
         )
     }
     
@@ -845,7 +884,7 @@ struct CategoryItemCard: View {
                     Text(item.name)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     
@@ -875,16 +914,7 @@ struct CategoryItemCard: View {
             .padding(.horizontal, 8)
             .padding(.top, 8)
             
-            // Storage location
-            if let zoneTag = item.zoneTag {
-                Text(zoneTag)
-                    .font(.caption2)
-                    .foregroundColor(Color(.tertiaryLabel))
-                    .lineLimit(1)
-                    .padding(.horizontal, 8)
-            }
-            
-            // Green expiry label for Food Categories
+            // Days left badge (similar to expiring/expired sections)
             if !item.isExpired && !item.isExpiringSoon {
                 let daysLeft = item.daysUntilExpiration
                 if daysLeft > 3 {
@@ -902,28 +932,36 @@ struct CategoryItemCard: View {
                 }
             }
             
-            // Quantity and expiration indicator
-            HStack {
+            // Quantity and location (same order as expiring/expired sections)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(item.quantityDisplay)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
-                Spacer()
-                
-                expirationIndicator
+                if let zoneTag = item.zoneTag {
+                    Text(zoneTag)
+                        .font(.caption2)
+                        .foregroundColor(Color(.tertiaryLabel))
+                }
             }
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
         }
-        .padding(DesignSystem.Spacing.sm)
-        .frame(minWidth: 180, maxWidth: .infinity, alignment: .leading)
+        .padding(DesignSystem.Spacing.lg)
+        .frame(width: 180, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                .fill(Color(.systemBackground))
+                .fill(Color.cardBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
                         .stroke(isSelected ? Color.oceanBlue : Color.clear, lineWidth: 2)
                 )
+        )
+        .shadow(
+            color: Color.black.opacity(0.1),
+            radius: 4,
+            x: 0,
+            y: 2
         )
         .scaleEffect(isPressed ? 0.95 : 1.0)
         .swipeActions(edge: .trailing) {
@@ -932,6 +970,12 @@ struct CategoryItemCard: View {
             }
             .tint(.softCoral)
             
+            Button("Edit") {
+                onEdit(item)
+            }
+            .tint(.oceanBlue)
+        }
+        .swipeActions(edge: .leading) {
             Button("Edit") {
                 onEdit(item)
             }

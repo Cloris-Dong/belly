@@ -18,7 +18,7 @@ struct TwoPhaseAddToFridgeView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            VStack(spacing: 0) {
                 if !showingConfiguration {
                     // Phase 1: Simple Selection
                     SelectionPhaseView(
@@ -26,7 +26,8 @@ struct TwoPhaseAddToFridgeView: View {
                         selectedItems: $selectedItems,
                         onContinue: {
                             showingConfiguration = true
-                        }
+                        },
+                        onCancel: { dismiss() }
                     )
                 } else {
                     // Phase 2: Detailed Configuration
@@ -43,13 +44,8 @@ struct TwoPhaseAddToFridgeView: View {
                     )
                 }
             }
-            .navigationTitle(showingConfiguration ? "Configure Items" : "Select Items")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
+            .background(Color.appBackground)
+            .navigationBarHidden(true)
         }
         .onAppear {
             // Pre-select all items
@@ -62,49 +58,121 @@ struct SelectionPhaseView: View {
     let purchasedItems: [GroceryItem]
     @Binding var selectedItems: Set<UUID>
     let onContinue: () -> Void
+    let onCancel: () -> Void
     
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Which items do you want to add to your fridge?")
-                .font(.headline)
-                .multilineTextAlignment(.center)
-            
-            List {
-                ForEach(Array(purchasedItems.enumerated()), id: \.element.id) { _, item in
-                    HStack {
-                        Button(action: {
-                            if selectedItems.contains(item.id) {
-                                selectedItems.remove(item.id)
-                            } else {
-                                selectedItems.insert(item.id)
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: selectedItems.contains(item.id) ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(selectedItems.contains(item.id) ? .blue : .secondary)
-                                
-                                Text("\(item.name) \(item.quantity, specifier: "%.0f") \(item.unit)")
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                            }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
+        VStack(spacing: 0) {
+            // Header Bar
+            HStack {
+                Button(action: {
+                    onCancel()
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.gray)
                 }
+                
+                Spacer()
+                
+                Text("Select Items")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
+                
+                Spacer()
+                
+                Button(action: {
+                    onContinue()
+                }) {
+                    Image(systemName: "checkmark")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+                }
+                .disabled(selectedItems.isEmpty)
             }
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.vertical, DesignSystem.Spacing.xl)
+            .background(
+                Color.appBackground
+                    .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
+            )
             
-            Button("Configure \(selectedItems.count) Items") {
-                onContinue()
+            // Content
+            VStack(spacing: DesignSystem.Spacing.lg) {
+                // Header text
+                VStack(spacing: DesignSystem.Spacing.sm) {
+                    Text("Which items do you want to add to your fridge?")
+                        .font(.headline)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.primaryText)
+                }
+                .padding(.top, DesignSystem.Spacing.lg)
+                
+                // Items list
+                ScrollView {
+                    LazyVStack(spacing: DesignSystem.Spacing.md) {
+                        ForEach(Array(purchasedItems.enumerated()), id: \.element.id) { _, item in
+                            SelectionItemCard(
+                                item: item,
+                                isSelected: selectedItems.contains(item.id),
+                                onToggle: {
+                                    if selectedItems.contains(item.id) {
+                                        selectedItems.remove(item.id)
+                                    } else {
+                                        selectedItems.insert(item.id)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                }
+                
+                Spacer()
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(selectedItems.isEmpty ? Color.gray : Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .disabled(selectedItems.isEmpty)
-            .padding()
         }
+    }
+}
+
+struct SelectionItemCard: View {
+    let item: GroceryItem
+    let isSelected: Bool
+    let onToggle: () -> Void
+    
+    var body: some View {
+        Button(action: onToggle) {
+            HStack {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundColor(isSelected ? .oceanBlue : .secondary)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.name)
+                        .font(.headline)
+                        .foregroundColor(.primaryText)
+                    
+                    Text("\(item.quantity, specifier: "%.0f") \(item.unit)")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            .padding(DesignSystem.Spacing.lg)
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
+                    .fill(Color(.systemBackground))
+                    .shadow(
+                        color: Color.black.opacity(0.1),
+                        radius: 4,
+                        x: 0,
+                        y: 2
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -149,9 +217,46 @@ struct ConfigurationPhaseView: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+            // Header Bar
+            HStack {
+                Button(action: {
+                    onBack()
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.gray)
+                }
+                
+                Spacer()
+                
+                Text("Configure Items")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
+                
+                Spacer()
+                
+                Button(action: {
+                    onComplete(selectedItems)
+                }) {
+                    Image(systemName: "checkmark")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding(.horizontal, DesignSystem.Spacing.lg)
+            .padding(.vertical, DesignSystem.Spacing.xl)
+            .background(
+                Color.appBackground
+                    .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
+            )
+            
+            // Content
             ScrollView {
-                LazyVStack(spacing: 16) {
+                LazyVStack(spacing: DesignSystem.Spacing.xl) {
                     ForEach(selectedItems) { item in
                         ItemConfigurationCard(
                             item: item,
@@ -166,29 +271,10 @@ struct ConfigurationPhaseView: View {
                         )
                     }
                 }
-                .padding()
+                .padding(DesignSystem.Spacing.lg)
             }
             
-            HStack(spacing: 16) {
-                Button("Back") {
-                    onBack()
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(.systemGray5))
-                .foregroundColor(.primary)
-                .cornerRadius(12)
-                
-                Button("Add to Fridge") {
-                    onComplete(selectedItems)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(12)
-            }
-            .padding()
+            Spacer()
         }
         .onAppear {
             // Initialize configurations for all items
@@ -220,87 +306,213 @@ struct ItemConfigurationCard: View {
     let onAddLocation: () -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(item.name)
-                .font(.headline)
+        VStack(spacing: DesignSystem.Spacing.lg) {
+            // Item name header
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Food Name")
+                    .font(.subheadline)
+                    .foregroundColor(.primaryText)
+                
+                Text(item.name)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                    )
+            }
             
-            // Same configuration options as manual entry
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("Quantity")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    HStack {
-                        TextField("Qty", value: $configuration.quantity, format: .number)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 60)
-                        
-                        Picker("Unit", selection: $configuration.unit) {
-                            ForEach(["pieces", "kg", "g", "liters", "bottles", "packs"], id: \.self) { unit in
-                                Text(unit).tag(unit)
-                            }
-                        }
-                        .pickerStyle(.menu)
+            // Category section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Category")
+                    .font(.subheadline)
+                    .foregroundColor(.primaryText)
+                
+                Picker("Category", selection: $configuration.category) {
+                    ForEach(FoodCategory.allCases) { category in
+                        Text(category.emoji + "  " + category.rawValue)
+                            .tag(category)
                     }
                 }
+                .pickerStyle(.menu)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+            }
+            
+            // Quantity section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Quantity")
+                    .font(.subheadline)
+                    .foregroundColor(.primaryText)
                 
-                Spacer()
-                
-                VStack(alignment: .leading) {
-                    Text("Shelf Life")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                HStack {
+                    TextField("Quantity", value: $configuration.quantity, format: .number)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.center)
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.oceanBlue)
+                        .textFieldStyle(PlainTextFieldStyle())
+                        .frame(width: 100, alignment: .center)
+                        .frame(height: 40)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(.white)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                )
+                        )
+                        .layoutPriority(1)
                     
-                    Stepper("\(configuration.shelfLifeDays) days", value: $configuration.shelfLifeDays, in: 1...30)
+                    Picker("Unit", selection: $configuration.unit) {
+                        ForEach(["pieces", "kg", "g", "liters", "bottles", "packs"], id: \.self) { unit in
+                            Text(unit).tag(unit)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .font(.caption)
+                    .frame(minWidth: 80)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                    )
                 }
             }
             
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("Category")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+            // Shelf Life and Expires On in one line
+            HStack(spacing: DesignSystem.Spacing.lg) {
+                // Shelf life
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Shelf Life")
+                        .font(.subheadline)
+                        .foregroundColor(.primaryText)
                     
-                    Picker("Category", selection: $configuration.category) {
-                        ForEach(FoodCategory.allCases, id: \.self) { category in
-                            Text(category.emoji + "  " + category.rawValue)
-                                .tag(category)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                }
-                
-                Spacer()
-                
-                VStack(alignment: .leading) {
-                    Text("Location")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Picker("Location", selection: $configuration.location) {
-                        ForEach(locationManager.allLocations, id: \.self) { location in
-                            Text(location).tag(location)
+                    HStack(spacing: 8) {
+                        Button(action: {
+                            if configuration.shelfLifeDays > 1 {
+                                configuration.shelfLifeDays -= 1
+                            }
+                        }) {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(.gray)
                         }
                         
-                        Text("Add New Location...")
+                        Text("\(configuration.shelfLifeDays)")
+                            .font(.title2)
+                            .fontWeight(.semibold)
                             .foregroundColor(.oceanBlue)
-                            .tag("add_new")
-                    }
-                    .pickerStyle(.menu)
-                    .onChange(of: configuration.location) { newValue in
-                        if newValue == "add_new" {
-                            onAddLocation()
-                            configuration.location = locationManager.allLocations.first ?? "Middle Shelf"
+                            .frame(width: 30)
+                        
+                        Button(action: {
+                            if configuration.shelfLifeDays < 365 {
+                                configuration.shelfLifeDays += 1
+                            }
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(.oceanBlue)
                         }
+                        
+                        Text("days")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                    )
+                }
+                
+                // Expires on date
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Expires On")
+                        .font(.subheadline)
+                        .foregroundColor(.primaryText)
+                    
+                    DatePicker("", selection: Binding(
+                        get: { 
+                            Calendar.current.date(byAdding: .day, value: configuration.shelfLifeDays, to: Date()) ?? Date()
+                        },
+                        set: { newDate in
+                            let calendar = Calendar.current
+                            let today = calendar.startOfDay(for: Date())
+                            let selectedDate = calendar.startOfDay(for: newDate)
+                            let daysDifference = calendar.dateComponents([.day], from: today, to: selectedDate).day ?? 0
+                            configuration.shelfLifeDays = max(1, daysDifference)
+                        }
+                    ), in: Date()..., displayedComponents: .date)
+                    .datePickerStyle(CompactDatePickerStyle())
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                    )
+                }
+            }
+            .frame(height: 100)
+            
+            // Location section
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Location")
+                    .font(.subheadline)
+                    .foregroundColor(.primaryText)
+                
+                Picker("Location", selection: $configuration.location) {
+                    ForEach(locationManager.allLocations, id: \.self) { location in
+                        Text(location).tag(location)
+                    }
+                    
+                    Text("Add New Location...")
+                        .foregroundColor(.oceanBlue)
+                        .tag("add_new")
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+                .cuteDropdownStyle()
+                .onChange(of: configuration.location) { newValue in
+                    if newValue == "add_new" {
+                        onAddLocation()
+                        configuration.location = locationManager.allLocations.first ?? "Middle Shelf"
                     }
                 }
             }
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .padding(DesignSystem.Spacing.lg)
+        .background(
+            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.md)
+                .fill(Color(.systemBackground))
+                .shadow(
+                    color: Color.black.opacity(0.1),
+                    radius: 4,
+                    x: 0,
+                    y: 2
+                )
+        )
     }
 }
 

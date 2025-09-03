@@ -63,12 +63,18 @@ struct AddPurchasedItemsView: View {
                 }
                 .padding()
             }
+            .background(Color.appBackground)
             .navigationTitle("Add to Fridge")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button(action: {
                         dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.gray)
                     }
                 }
             }
@@ -168,6 +174,7 @@ struct ManualEntryForPurchasedView: View {
                     .padding()
                 }
             }
+            .background(Color.appBackground)
             .navigationTitle("Manual Entry")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

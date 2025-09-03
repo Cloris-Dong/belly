@@ -9,19 +9,19 @@ import SwiftUI
 
 extension Color {
     
-    // MARK: - App Color Palette
+    // MARK: - App Color Palette - Cute & Soft
     
-    /// Ocean blue #339AF0 - Primary action color
-    static let oceanBlue = Color(hex: "339AF0")
+    /// Darker pink #E91E63 - Primary action color (more visible)
+    static let oceanBlue = Color(hex: "E91E63")
     
-    /// Soft coral #FF6B6B - Warning/alert color
-    static let softCoral = Color(hex: "FF6B6B")
+    /// Medium pink #F06292 - Secondary action color (good visibility)
+    static let softCoral = Color(hex: "F06292")
     
-    /// Warm amber #FFB84D - Warning/attention color
-    static let warmAmber = Color(hex: "FFB84D")
+    /// Warm peach #FF8A65 - Warning/attention color (more visible)
+    static let warmAmber = Color(hex: "FF8A65")
     
-    /// Sage green #51CF66 - Success/fresh color
-    static let sageGreen = Color(hex: "51CF66")
+    /// Teal green #4DB6AC - Success/fresh color (better contrast)
+    static let sageGreen = Color(hex: "4DB6AC")
     
     // MARK: - Semantic Colors
     
@@ -39,23 +39,23 @@ extension Color {
     
     // MARK: - UI Colors
     
-    /// Background color for main views
-    static let appBackground = Color(.systemBackground)
+    /// Background color for main views - Soft cream
+    static let appBackground = creamWhite
     
-    /// Secondary background for cards/sections
-    static let cardBackground = Color(.secondarySystemBackground)
+    /// Secondary background for cards/sections - Very soft white
+    static let cardBackground = Color(.systemBackground).opacity(0.95)
     
-    /// Tertiary background for subtle elements
-    static let tertiaryBackground = Color(.tertiarySystemBackground)
+    /// Tertiary background for subtle elements - Soft gray
+    static let tertiaryBackground = Color(.systemGray6).opacity(0.8)
     
-    /// Text color for primary content
-    static let primaryText = Color(.label)
+    /// Text color for primary content - darker for better visibility
+    static let primaryText = darkPink
     
-    /// Text color for secondary content
-    static let secondaryText = Color(.secondaryLabel)
+    /// Text color for secondary content - medium pink
+    static let secondaryText = mediumPink
     
-    /// Text color for tertiary content
-    static let tertiaryText = Color(.tertiaryLabel)
+    /// Text color for tertiary content - softer but still visible
+    static let tertiaryText = Color(.tertiaryLabel).opacity(0.8)
     
     /// Border color for UI elements
     static let borderColor = Color(.separator)
@@ -63,19 +63,67 @@ extension Color {
     /// Grouped background color
     static let groupedBackground = Color(.systemGroupedBackground)
     
+    // MARK: - Form & Dropdown Colors
+    
+    /// Dropdown text color - dark for visibility
+    static let dropdownText = darkPink
+    
+    /// Dropdown background color - light but visible
+    static let dropdownBackground = Color(.systemBackground)
+    
+    /// Form field text color
+    static let formText = darkPink
+    
+    /// Form field border color
+    static let formBorder = mediumPink.opacity(0.6)
+    
     // MARK: - Status Colors
     
-    /// Fresh food status color
-    static let freshFood = sageGreen
+    /// Fresh food status color - darker for visibility
+    static let freshFood = darkTeal
     
-    /// Expiring soon food status color
-    static let expiringSoon = warmAmber
+    /// Expiring soon food status color - darker for visibility
+    static let expiringSoon = darkOrange
     
-    /// Expired food status color
-    static let expiredFood = softCoral
+    /// Expired food status color - darker for visibility
+    static let expiredFood = Color(hex: "D32F2F")
     
     /// Purchased grocery item color
     static let purchased = Color(.systemGray)
+    
+    // MARK: - Additional Cute Colors
+    
+    /// Soft yellow #FFE5B4 - Inspired by the cat's body color
+    static let softYellow = Color(hex: "FFE5B4")
+    
+    /// Light blue #B3D9FF - Inspired by the eraser and sprinkles
+    static let lightBlue = Color(hex: "B3D9FF")
+    
+    /// Warm orange #FFD1A3 - Inspired by the second cat's body color
+    static let warmOrange = Color(hex: "FFD1A3")
+    
+    /// Gentle lavender #E6CCFF - Soft accent color
+    static let gentleLavender = Color(hex: "E6CCFF")
+    
+    /// Cream white #FFF8E1 - Soft background color
+    static let creamWhite = Color(hex: "FFF8E1")
+    
+    /// Light sage green #E8F5E8 - Soft background color that complements cream
+    static let lightSageGreen = Color(hex: "E8F5E8")
+    
+    // MARK: - Text & Dropdown Colors
+    
+    /// Rich chocolate brown for primary text - good visibility
+    static let darkPink = Color(hex: "5D4037")
+    
+    /// Lighter chocolate brown for secondary text
+    static let mediumPink = Color(hex: "8D6E63")
+    
+    /// Dark teal for success text
+    static let darkTeal = Color(hex: "00796B")
+    
+    /// Dark orange for warning text
+    static let darkOrange = Color(hex: "E65100")
 }
 
 // MARK: - Hex Color Initializer

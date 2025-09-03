@@ -13,41 +13,49 @@ struct AIResultsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isAddingToFridge = false
     @State private var showingSuccessAlert = false
-    @State private var showingRecipes = false
-    @State private var generatedRecipes: [Recipe] = []
-    @State private var isGeneratingRecipes = false
+
     @StateObject private var aiManager = AIManager()
     @State private var showingSuccess = false
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Header
-                VStack(spacing: DesignSystem.Spacing.sm) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Review & Confirm")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
-                            
-                            Text("\(detectedItems.count) item\(detectedItems.count == 1 ? "" : "s") detected")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Button("Add Another") {
-                            addBlankItem()
-                        }
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.oceanBlue)
+                // Header Bar
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.gray)
                     }
+                    
+                    Spacer()
+                    
+                                    Text("Review")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        addItemsToFridge()
+                    }) {
+                        Image(systemName: "checkmark")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
+                    }
+                    .disabled(detectedItems.isEmpty || isAddingToFridge)
                 }
-                .padding(DesignSystem.Spacing.lg)
-                .background(Color(.systemBackground))
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.vertical, DesignSystem.Spacing.xl)
+                .background(
+                    Color.appBackground
+                        .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
+                )
                 
                 // Items list
                 if detectedItems.isEmpty {
@@ -63,61 +71,31 @@ struct AIResultsView: View {
                                     }
                                 )
                             }
-                            
-                            // Add Another Item Button
-                            Button("Add Another Item") {
-                                addBlankItem()
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.secondary.opacity(0.2))
-                            .cornerRadius(12)
-                            
-                            // Recipe Generation Section
-                            VStack(spacing: 12) {
-                                Divider()
-                                    .padding(.vertical)
-                                
-                                Text("Get Recipe Ideas")
-                                    .font(.headline)
-                                
-                                Text("Generate recipes using these ingredients")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                
-                                Button(action: generateRecipes) {
-                                    HStack {
-                                        if isGeneratingRecipes {
-                                            ProgressView()
-                                                .scaleEffect(0.8)
-                                        } else {
-                                            Image(systemName: "book.fill")
-                                        }
-                                        Text(isGeneratingRecipes ? "Generating..." : "Get Recipe Ideas")
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(Color.green)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(12)
-                                }
-                                .disabled(isGeneratingRecipes)
-                            }
-                            .padding()
-                            .background(Color.green.opacity(0.1))
-                            .cornerRadius(12)
                         }
                         .padding(DesignSystem.Spacing.lg)
+                        
+                        // Circular Plus Button
+                        Button(action: {
+                            addBlankItem()
+                        }) {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(width: 56, height: 56)
+                                .background(
+                                    Circle()
+                                        .fill(Color.oceanBlue)
+                                )
+                        }
+                        .shadow(color: Color.black.opacity(0.2), radius: 4, x: 0, y: 2)
                     }
                 }
                 
                 Spacer()
-                
-                // Bottom action bar
-                if !detectedItems.isEmpty {
-                    bottomActionBar
-                }
             }
+            .background(Color.appBackground)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .navigationBarHidden(true)
         }
         .alert("Items Added!", isPresented: $showingSuccessAlert) {
@@ -127,9 +105,7 @@ struct AIResultsView: View {
         } message: {
             Text("\(detectedItems.count) item\(detectedItems.count == 1 ? "" : "s") added to your fridge.")
         }
-        .sheet(isPresented: $showingRecipes) {
-            RecipeModalView(recipes: generatedRecipes, isGenerating: false)
-        }
+
         .overlay(
             Group {
                 if showingSuccess {
@@ -163,10 +139,10 @@ struct AIResultsView: View {
                 .foregroundColor(.secondary)
             
             VStack(spacing: DesignSystem.Spacing.sm) {
-                Text("No items detected")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+                                    Text("No items detected")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primaryText)
                 
                 Text("Try taking a clearer photo or add items manually")
                     .font(.subheadline)
@@ -190,45 +166,7 @@ struct AIResultsView: View {
         .padding(DesignSystem.Spacing.xl)
     }
     
-    // MARK: - Bottom Action Bar
-    
-    private var bottomActionBar: some View {
-        VStack(spacing: 0) {
-            Divider()
-            
-            HStack {
-                Button("Cancel") {
-                    dismiss()
-                }
-                .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                Text("\(detectedItems.count) item\(detectedItems.count == 1 ? "" : "s")")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Button("Add to Fridge") {
-                    addItemsToFridge()
-                }
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.white)
-                .padding(.horizontal, DesignSystem.Spacing.lg)
-                .padding(.vertical, DesignSystem.Spacing.sm)
-                .background(
-                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                        .fill(isAddingToFridge ? Color.gray : Color.oceanBlue)
-                )
-                .disabled(detectedItems.isEmpty || isAddingToFridge)
-            }
-            .padding(DesignSystem.Spacing.lg)
-            .background(Color(.systemBackground))
-        }
-    }
+
     
     // MARK: - Helper Functions
     
@@ -280,20 +218,7 @@ struct AIResultsView: View {
         }
     }
     
-    private func generateRecipes() {
-        isGeneratingRecipes = true
-        let ingredients = detectedItems.map { $0.name }
-        
-        Task {
-            let recipes = await aiManager.generateRecipesMock(from: ingredients)
-            
-            await MainActor.run {
-                self.generatedRecipes = recipes
-                self.isGeneratingRecipes = false
-                self.showingRecipes = true
-            }
-        }
-    }
+
     
     private func showSuccessAnimation() {
         showingSuccess = true
@@ -317,43 +242,49 @@ struct DetectedItemCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
-            // Header with confidence indicator
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
+            // Modern header with improved styling
+            VStack(alignment: .leading, spacing: 8) {
+                // Item name and delete button on same line
+                HStack {
                     TextField("Food name", text: $item.name)
-                        .font(.headline)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primaryText)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemGray6))
+                        )
                     
-                    HStack(spacing: DesignSystem.Spacing.sm) {
-                        confidenceBadge
-                        
-                        Text("•")
-                            .foregroundColor(.secondary)
-                        
-                        Text("\(item.confidencePercentage)% confidence")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    Spacer()
+                    
+                    Button(action: { showingDeleteAlert = true }) {
+                        Image(systemName: "trash")
+                            .font(.title3)
+                            .foregroundColor(.red.opacity(0.8))
                     }
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(8)
                 }
                 
-                Spacer()
-                
-                Button(action: { showingDeleteAlert = true }) {
-                    Image(systemName: "trash")
-                        .foregroundColor(.softCoral)
-                        .font(.subheadline)
+                HStack(spacing: 10) {
+                    confidenceBadge
+                    
+                    Text("\(item.confidencePercentage)% confidence")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-                .frame(width: 44, height: 44)
             }
             
-            // Form fields
-            VStack(spacing: DesignSystem.Spacing.md) {
-                // Category picker
-                VStack(alignment: .leading, spacing: 4) {
+            // Modern form fields with card-based design
+            VStack(spacing: DesignSystem.Spacing.lg) {
+                // Category section - separate line
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Category")
                         .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                     
                     Picker("Category", selection: $item.category) {
                         ForEach(FoodCategory.allCases, id: \.rawValue) { category in
@@ -363,59 +294,142 @@ struct DetectedItemCard: View {
                     }
                     .pickerStyle(MenuPickerStyle())
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, DesignSystem.Spacing.sm)
-                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
                     )
                 }
                 
-                // Shelf life and quantity
-                HStack(spacing: DesignSystem.Spacing.md) {
-                    // Shelf life
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Shelf Life")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
-                        
-                        Stepper("\(item.shelfLifeDays) days", value: $item.shelfLifeDays, in: 1...365)
-                            .font(.subheadline)
-                    }
+                // Quantity section - separate line
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Quantity")
+                        .font(.subheadline)
+                        .foregroundColor(.primaryText)
                     
-                    Spacer()
-                    
-                    // Quantity and unit
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Quantity")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
+                    HStack(spacing: 8) {
+                        TextField("1", value: $item.quantity, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.center)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.oceanBlue)
+                            .textFieldStyle(PlainTextFieldStyle())
+                            .frame(width: 100, alignment: .center)
+                            .frame(height: 40)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.white)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color(.systemGray4), lineWidth: 1)
+                                    )
+                            )
+                            .layoutPriority(1)
                         
-                        HStack(spacing: DesignSystem.Spacing.sm) {
-                            TextField("Qty", value: $item.quantity, format: .number)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 60)
-                            
-                            Picker("Unit", selection: $item.unit) {
-                                ForEach(FoodUnit.allCases, id: \.rawValue) { unit in
-                                    Text(unit.rawValue).tag(unit.rawValue)
-                                }
+                        Picker("Unit", selection: $item.unit) {
+                            ForEach(FoodUnit.allCases, id: \.rawValue) { unit in
+                                Text(unit.rawValue).tag(unit.rawValue)
                             }
-                            .pickerStyle(MenuPickerStyle())
-                            .frame(width: 100)
                         }
+                        .pickerStyle(MenuPickerStyle())
+                        .font(.caption)
+                        .frame(minWidth: 80)
+                        .fixedSize(horizontal: true, vertical: false)
+                        
+                        Spacer()
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                    )
                 }
                 
-                // Location picker
-                VStack(alignment: .leading, spacing: 4) {
+                // Shelf Life and Expires On in one line
+                HStack(spacing: DesignSystem.Spacing.lg) {
+                    // Shelf life
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Shelf Life")
+                            .font(.subheadline)
+                            .foregroundColor(.primaryText)
+                        
+                        HStack(spacing: 8) {
+                            Button(action: {
+                                if item.shelfLifeDays > 1 {
+                                    item.shelfLifeDays -= 1
+                                }
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.gray)
+                            }
+                            
+                            Text("\(item.shelfLifeDays)")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.oceanBlue)
+                                .frame(width: 30)
+                            
+                            Button(action: {
+                                if item.shelfLifeDays < 365 {
+                                    item.shelfLifeDays += 1
+                                }
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.oceanBlue)
+                            }
+                            
+                            Text("days")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemGray6))
+                        )
+                    }
+                    
+                    // Expires on date
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Expires On")
+                            .font(.subheadline)
+                            .foregroundColor(.primaryText)
+                        
+                        DatePicker("", selection: Binding(
+                            get: { item.expirationDate },
+                            set: { newDate in
+                                let calendar = Calendar.current
+                                let today = calendar.startOfDay(for: Date())
+                                let selectedDate = calendar.startOfDay(for: newDate)
+                                let daysDifference = calendar.dateComponents([.day], from: today, to: selectedDate).day ?? 0
+                                item.shelfLifeDays = max(1, daysDifference)
+                            }
+                        ), in: Date()..., displayedComponents: .date)
+                        .datePickerStyle(CompactDatePickerStyle())
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemGray6))
+                        )
+                    }
+                }
+                .frame(height: 100)
+                
+                // Location section
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Location")
                         .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.primaryText)
                     
                     Picker("Location", selection: $item.location) {
                         ForEach(locationManager.allLocations, id: \.self) { location in
@@ -428,12 +442,13 @@ struct DetectedItemCard: View {
                     }
                     .pickerStyle(MenuPickerStyle())
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, DesignSystem.Spacing.sm)
-                    .padding(.vertical, DesignSystem.Spacing.xs)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
                     )
+                    .cuteDropdownStyle()
                     .onChange(of: item.location) { newValue in
                         if newValue == "add_new" {
                             showingAddLocation = true
@@ -480,16 +495,19 @@ struct DetectedItemCard: View {
     // MARK: - Confidence Badge
     
     private var confidenceBadge: some View {
-        Text(item.confidenceColor)
-            .font(.caption2)
-            .fontWeight(.semibold)
-            .foregroundColor(.white)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, 2)
-            .background(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                    .fill(confidenceColor)
-            )
+        HStack(spacing: 4) {
+            Circle()
+                .fill(confidenceColor)
+                .frame(width: 6, height: 6)
+            Text(item.confidenceColor)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(confidenceColor)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(confidenceColor.opacity(0.1))
+        .cornerRadius(8)
     }
     
     private var confidenceColor: Color {
