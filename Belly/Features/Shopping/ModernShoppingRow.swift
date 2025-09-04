@@ -128,6 +128,12 @@ struct ModernShoppingRow: View {
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button("Delete", role: .destructive, action: onDelete)
         }
+        .onTapGesture {
+            // Dismiss keyboard when tapping outside text fields
+            if isNameFocused || isQuantityFocused {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            }
+        }
         .onAppear {
             editedName = item.name
             editedQuantity = item.quantity

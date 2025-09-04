@@ -21,12 +21,8 @@ struct DetectedFood: Identifiable, Codable {
     var quantity: Double = 1.0
     var unit: String = "pieces"
     
-    // Computed expiration date based on shelf life
-    var expirationDate: Date {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        return calendar.date(byAdding: .day, value: shelfLifeDays, to: today) ?? today
-    }
+    // Stored expiration date that can be modified by DatePicker
+    var expirationDate: Date
     
     // MARK: - Initializer
     
@@ -39,6 +35,11 @@ struct DetectedFood: Identifiable, Codable {
         self.confidence = confidence
         self.quantity = quantity
         self.unit = unit
+        
+        // Calculate initial expiration date based on shelf life
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        self.expirationDate = calendar.date(byAdding: .day, value: shelfLifeDays, to: today) ?? today
     }
     
     // Computed properties for UI

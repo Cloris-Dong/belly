@@ -210,7 +210,7 @@ struct EditItemView: View {
                                     .datePickerStyle(.compact)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
+                                    .padding(.vertical, 12)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color(.systemGray6))
@@ -296,7 +296,13 @@ struct EditItemView: View {
                 
                 Spacer()
             }
-            .background(Color.appBackground)
+            .background(
+                Color.appBackground
+                    .onTapGesture {
+                        // Dismiss keyboard when tapping on background
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
             .navigationBarHidden(true)
             .alert("Remove Item", isPresented: $showingDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }

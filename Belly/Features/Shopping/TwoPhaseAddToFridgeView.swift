@@ -12,6 +12,7 @@ struct TwoPhaseAddToFridgeView: View {
     let onComplete: ([GroceryItem]) -> Void
     @Environment(\.dismiss) private var dismiss
     @StateObject private var locationManager = LocationManager()
+    @ObservedObject private var fridgeDataService = FridgeDataService.shared
     
     @State private var selectedItems: Set<UUID> = []
     @State private var showingConfiguration = false
@@ -34,6 +35,7 @@ struct TwoPhaseAddToFridgeView: View {
                     ConfigurationPhaseView(
                         selectedItems: purchasedItems.filter { selectedItems.contains($0.id) },
                         locationManager: locationManager,
+                        fridgeDataService: fridgeDataService,
                         onComplete: { configuredItems in
                             onComplete(configuredItems)
                             dismiss()
@@ -44,7 +46,13 @@ struct TwoPhaseAddToFridgeView: View {
                     )
                 }
             }
-            .background(Color.appBackground)
+            .background(
+                Color.appBackground
+                    .onTapGesture {
+                        // Dismiss keyboard when tapping on background
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
             .navigationBarHidden(true)
         }
         .onAppear {
@@ -179,6 +187,7 @@ struct SelectionItemCard: View {
 struct ConfigurationPhaseView: View {
     let selectedItems: [GroceryItem]
     let locationManager: LocationManager
+    let fridgeDataService: FridgeDataService
     let onComplete: ([GroceryItem]) -> Void
     let onBack: () -> Void
     
@@ -239,6 +248,7 @@ struct ConfigurationPhaseView: View {
                 Spacer()
                 
                 Button(action: {
+                    addItemsToFridge()
                     onComplete(selectedItems)
                 }) {
                     Image(systemName: "checkmark")
@@ -296,6 +306,34 @@ struct ConfigurationPhaseView: View {
         } message: {
             Text("Enter a name for the new storage location")
         }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func addItemsToFridge() {
+        var foodItemsToAdd: [FoodItem] = []
+        
+        for item in selectedItems {
+            let config = itemConfigurations[item.id] ?? ItemConfiguration(from: item)
+            
+            let foodItem = FoodItem(
+                name: item.name,
+                category: config.category,
+                quantity: config.quantity,
+                unit: FoodUnit.allCases.first { $0.rawValue == config.unit } ?? .pieces,
+                expirationDate: Calendar.current.date(byAdding: .day, value: config.shelfLifeDays, to: Date()) ?? Date(),
+                dateAdded: Date(),
+                zoneTag: config.location,
+                storage: "Refrigerator" // Default storage
+            )
+            
+            foodItemsToAdd.append(foodItem)
+        }
+        
+        // Add all items to fridge using the data service
+        fridgeDataService.addItems(foodItemsToAdd)
+        
+        print("✅ Successfully added \(foodItemsToAdd.count) items to fridge from shopping list!")
     }
 }
 
@@ -457,18 +495,17 @@ struct ItemConfigurationCard: View {
                             configuration.shelfLifeDays = max(1, daysDifference)
                         }
                     ), in: Date()..., displayedComponents: .date)
-                    .datePickerStyle(CompactDatePickerStyle())
+                    .datePickerStyle(.compact)
                     .labelsHidden()
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
-                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
                     )
                 }
             }
-            .frame(height: 100)
             
             // Location section
             VStack(alignment: .leading, spacing: 8) {

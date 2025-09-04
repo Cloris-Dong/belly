@@ -16,11 +16,6 @@ struct NewItemRow: View {
     @FocusState private var isNameFocused: Bool
     @FocusState private var isQuantityFocused: Bool
     
-    // Computed property to check if any field is focused
-    var isAnyFieldFocused: Bool {
-        isNameFocused || isQuantityFocused
-    }
-    
     var body: some View {
         HStack(spacing: 12) {
             // Empty circle
@@ -37,6 +32,11 @@ struct NewItemRow: View {
                     .foregroundColor(.primaryText)
                     .onSubmit {
                         addItem()
+                    }
+                    .onChange(of: isNameFocused) { _ in
+                        if !isNameFocused && !newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            addItem()
+                        }
                     }
                 
                 // Quantity and unit row
@@ -62,6 +62,11 @@ struct NewItemRow: View {
                                             .stroke(isQuantityFocused ? Color.primaryText : Color.clear, lineWidth: 1)
                                     )
                             )
+                            .onChange(of: isQuantityFocused) { _ in
+                                if !isQuantityFocused && !newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                    addItem()
+                                }
+                            }
                     }
                     
                     // Unit selector
@@ -106,12 +111,12 @@ struct NewItemRow: View {
                 .foregroundColor(.primaryText.opacity(0.3))
         )
         .onTapGesture {
-            isNameFocused = true
-        }
-        .onChange(of: isAnyFieldFocused) { isFocused in
-            // When focus is lost and there's text to add, automatically add the item
-            if !isFocused && !newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                addItem()
+            if isNameFocused || isQuantityFocused {
+                // If a text field is focused, dismiss keyboard
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            } else {
+                // If no text field is focused, focus the name field
+                isNameFocused = true
             }
         }
     }

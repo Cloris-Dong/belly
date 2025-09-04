@@ -8,7 +8,7 @@
 import Foundation
 
 /// Units for measuring food quantities
-enum FoodUnit: String, CaseIterable, Identifiable {
+enum FoodUnit: String, CaseIterable, Identifiable, Codable {
     case grams = "g"
     case kilograms = "kg"
     case pieces = "pieces"

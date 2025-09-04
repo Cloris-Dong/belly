@@ -15,6 +15,7 @@ struct BellyApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.viewContext)
+                .preferredColorScheme(.light) // Force light mode only
         }
     }
 }

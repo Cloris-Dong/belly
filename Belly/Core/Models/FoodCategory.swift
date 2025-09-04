@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 /// Food categories for organizing items in the fridge
-enum FoodCategory: String, CaseIterable, Identifiable {
+enum FoodCategory: String, CaseIterable, Identifiable, Codable {
     case vegetables = "Vegetables"
     case fruits = "Fruits"
     case meat = "Meat"

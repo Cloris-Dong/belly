@@ -9,13 +9,13 @@ import SwiftUI
 
 struct AIResultsView: View {
     @Binding var detectedItems: [DetectedFood]
-    @StateObject private var fridgeViewModel = FridgeViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var isAddingToFridge = false
     @State private var showingSuccessAlert = false
-
-    @StateObject private var aiManager = AIManager()
     @State private var showingSuccess = false
+    
+    // Data service for adding items to fridge
+    @ObservedObject private var fridgeDataService = FridgeDataService.shared
     
     var body: some View {
         NavigationView {
@@ -94,7 +94,13 @@ struct AIResultsView: View {
                 
                 Spacer()
             }
-            .background(Color.appBackground)
+            .background(
+                Color.appBackground
+                    .onTapGesture {
+                        // Dismiss keyboard when tapping on background
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+            )
             .ignoresSafeArea(.keyboard, edges: .bottom)
             .navigationBarHidden(true)
         }
@@ -192,22 +198,27 @@ struct AIResultsView: View {
         isAddingToFridge = true
         
         // Convert detected items to FoodItems and add to fridge
+        var foodItemsToAdd: [FoodItem] = []
+        
         for detectedItem in detectedItems {
             let foodItem = FoodItem(
                 name: detectedItem.name.isEmpty ? "Unknown Item" : detectedItem.name,
                 category: FoodCategory.allCases.first { $0.rawValue == detectedItem.category } ?? .other,
-                quantity: detectedItem.quantity, // Use quantity from DetectedFood
-                unit: FoodUnit.allCases.first { $0.rawValue == detectedItem.unit } ?? .pieces, // Use unit from DetectedFood
+                quantity: detectedItem.quantity,
+                unit: FoodUnit.allCases.first { $0.rawValue == detectedItem.unit } ?? .pieces,
                 expirationDate: Calendar.current.date(byAdding: .day, value: detectedItem.shelfLifeDays, to: Date()) ?? Date(),
                 dateAdded: Date(),
-                zoneTag: detectedItem.location, // Save location as zoneTag
+                zoneTag: detectedItem.location,
                 storage: detectedItem.storage
             )
             
-            // Add to fridge view model (mock data for now)
-            // TODO: Integrate with real Core Data when available
-            print("Adding to fridge: \(detectedItem.name)")
+            foodItemsToAdd.append(foodItem)
         }
+        
+        // Add all items to fridge using the data service
+        fridgeDataService.addItems(foodItemsToAdd)
+        
+        print("✅ Successfully added \(foodItemsToAdd.count) items to fridge!")
         
         // Show success animation
         showSuccessAnimation()
@@ -402,28 +413,25 @@ struct DetectedItemCard: View {
                             .font(.subheadline)
                             .foregroundColor(.primaryText)
                         
-                        DatePicker("", selection: Binding(
-                            get: { item.expirationDate },
-                            set: { newDate in
-                                let calendar = Calendar.current
-                                let today = calendar.startOfDay(for: Date())
-                                let selectedDate = calendar.startOfDay(for: newDate)
-                                let daysDifference = calendar.dateComponents([.day], from: today, to: selectedDate).day ?? 0
-                                item.shelfLifeDays = max(1, daysDifference)
-                            }
-                        ), in: Date()..., displayedComponents: .date)
-                        .datePickerStyle(CompactDatePickerStyle())
+                        DatePicker("", selection: $item.expirationDate, in: Date()..., displayedComponents: .date)
+                        .datePickerStyle(.compact)
                         .labelsHidden()
-                        .frame(maxWidth: .infinity)
-                        .multilineTextAlignment(.center)
-                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 8)
                         .background(
                             RoundedRectangle(cornerRadius: 12)
                                 .fill(Color(.systemGray6))
                         )
+                        .onChange(of: item.expirationDate) { newDate in
+                            let calendar = Calendar.current
+                            let today = calendar.startOfDay(for: Date())
+                            let selectedDate = calendar.startOfDay(for: newDate)
+                            let daysDifference = calendar.dateComponents([.day], from: today, to: selectedDate).day ?? 0
+                            item.shelfLifeDays = max(1, daysDifference)
+                        }
                     }
                 }
-                .frame(height: 100)
                 
                 // Location section
                 VStack(alignment: .leading, spacing: 8) {

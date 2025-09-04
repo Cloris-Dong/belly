@@ -43,10 +43,10 @@ extension Color {
     static let appBackground = creamWhite
     
     /// Secondary background for cards/sections - Very soft white
-    static let cardBackground = Color(.systemBackground).opacity(0.95)
+    static let cardBackground = Color.white.opacity(0.95)
     
     /// Tertiary background for subtle elements - Soft gray
-    static let tertiaryBackground = Color(.systemGray6).opacity(0.8)
+    static let tertiaryBackground = Color(hex: "F2F2F7").opacity(0.8)
     
     /// Text color for primary content - darker for better visibility
     static let primaryText = darkPink
@@ -55,13 +55,13 @@ extension Color {
     static let secondaryText = mediumPink
     
     /// Text color for tertiary content - softer but still visible
-    static let tertiaryText = Color(.tertiaryLabel).opacity(0.8)
+    static let tertiaryText = Color(hex: "8E8E93").opacity(0.8)
     
     /// Border color for UI elements
-    static let borderColor = Color(.separator)
+    static let borderColor = Color(hex: "C6C6C8")
     
     /// Grouped background color
-    static let groupedBackground = Color(.systemGroupedBackground)
+    static let groupedBackground = Color(hex: "F2F2F7")
     
     // MARK: - Form & Dropdown Colors
     
@@ -69,7 +69,7 @@ extension Color {
     static let dropdownText = darkPink
     
     /// Dropdown background color - light but visible
-    static let dropdownBackground = Color(.systemBackground)
+    static let dropdownBackground = Color.white
     
     /// Form field text color
     static let formText = darkPink
@@ -89,7 +89,7 @@ extension Color {
     static let expiredFood = Color(hex: "D32F2F")
     
     /// Purchased grocery item color
-    static let purchased = Color(.systemGray)
+    static let purchased = Color(hex: "8E8E93")
     
     // MARK: - Additional Cute Colors
     
@@ -190,16 +190,10 @@ extension Color {
 // MARK: - Dynamic Colors
 extension Color {
     
-    /// Color that adapts to light/dark mode
+    /// Color that adapts to light/dark mode (disabled - app uses light mode only)
     static func adaptive(light: Color, dark: Color) -> Color {
-        return Color(UIColor { traitCollection in
-            switch traitCollection.userInterfaceStyle {
-            case .dark:
-                return UIColor(dark)
-            default:
-                return UIColor(light)
-            }
-        })
+        // Always return light color since dark mode is disabled
+        return light
     }
     
     /// Lighter version of the color by increasing brightness

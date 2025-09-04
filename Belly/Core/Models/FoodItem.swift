@@ -7,8 +7,8 @@
 
 import Foundation
 
-/// Mock FoodItem model for development (will be replaced with Core Data entity)
-struct FoodItem: Identifiable, Hashable {
+/// FridgeItem model for storing food items in the fridge
+struct FoodItem: Identifiable, Hashable, Codable {
     let id = UUID()
     var name: String
     var category: FoodCategory

@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 /// ViewModel for managing fridge data and business logic
 final class FridgeViewModel: ObservableObject {
@@ -21,58 +22,81 @@ final class FridgeViewModel: ObservableObject {
     @Published var selectedItems: Set<UUID> = []
     @Published var isGeneratingRecipes = false
     
+    // MARK: - Data Service
+    
+    @ObservedObject private var dataService = FridgeDataService.shared
+    private var cancellables = Set<AnyCancellable>()
+    
     // MARK: - Initialization
     
     init() {
-        loadMockData()
+        setupDataServiceBinding()
+        loadData()
+    }
+    
+    /// Initialize with custom data service (for testing)
+    init(dataService: FridgeDataService) {
+        self.dataService = dataService
+        setupDataServiceBinding()
+        loadData()
+    }
+    
+    // MARK: - Private Setup
+    
+    private func setupDataServiceBinding() {
+        // Bind data service properties to published properties
+        dataService.$foodItems
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.foodItems, on: self)
+            .store(in: &cancellables)
+        
+        dataService.$isLoading
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.isLoading, on: self)
+            .store(in: &cancellables)
     }
     
     // MARK: - Data Loading
     
-    /// Load mock data for development
-    func loadMockData() {
-        isLoading = true
-        
-        // Simulate brief loading delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.foodItems = MockDataManager.shared.generateMockFoodItems()
-            self?.isLoading = false
-        }
+    /// Load data from storage
+    func loadData() {
+        dataService.loadFromStorage()
+    }
+    
+    /// Load demo data for development
+    func loadDemoData() {
+        dataService.loadDemoData()
     }
     
     /// Load different mock data sets for testing
     func loadMockData(type: MockDataType) {
-        isLoading = true
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            switch type {
-            case .comprehensive:
-                self?.foodItems = MockDataManager.shared.generateMockFoodItems()
-            case .minimal:
-                self?.foodItems = MockDataManager.shared.generateMinimalMockData()
-            case .fresh:
-                self?.foodItems = MockDataManager.shared.generateFreshMockData()
-            case .empty:
-                self?.foodItems = MockDataManager.shared.generateEmptyMockData()
-            }
-            self?.isLoading = false
+        switch type {
+        case .comprehensive:
+            dataService.addItems(MockDataManager.shared.generateMockFoodItems())
+        case .minimal:
+            dataService.addItems(MockDataManager.shared.generateMinimalMockData())
+        case .fresh:
+            dataService.addItems(MockDataManager.shared.generateFreshMockData())
+        case .empty:
+            dataService.clearAllData()
         }
+    }
+    
+    /// Reset with demo data
+    func resetWithDemoData() {
+        dataService.resetWithDemoData()
     }
     
     // MARK: - Computed Properties
     
     /// Items that have expired, sorted by expiration date (most recently expired first)
     var expiredItems: [FoodItem] {
-        foodItems
-            .filter { $0.isExpired }
-            .sorted { $0.expirationDate > $1.expirationDate }
+        dataService.expiredItems
     }
     
     /// Items expiring within 3 days (but not expired), sorted by expiration date
     var expiringItems: [FoodItem] {
-        foodItems
-            .filter { $0.isExpiringSoon && !$0.isExpired }
-            .sorted { $0.expirationDate < $1.expirationDate }
+        dataService.expiringItems
     }
     
     /// Items grouped by category with counts (excludes expired and expiring items)
@@ -86,7 +110,7 @@ final class FridgeViewModel: ObservableObject {
         }
         
         // Group items by category (only fresh items)
-        let freshItems = foodItems.filter { !$0.isExpired && !$0.isExpiringSoon }
+        let freshItems = dataService.freshItems
         for item in freshItems {
             result[item.category, default: []].append(item)
         }
@@ -139,22 +163,22 @@ final class FridgeViewModel: ObservableObject {
     
     /// Total number of items
     var totalItemsCount: Int {
-        foodItems.count
+        dataService.totalItemsCount
     }
     
     /// Number of expiring items
     var expiringItemsCount: Int {
-        expiringItems.count
+        dataService.expiringItemsCount
     }
     
     /// Number of expired items
     var expiredItemsCount: Int {
-        foodItems.filter { $0.isExpired }.count
+        dataService.expiredItemsCount
     }
     
     /// Number of fresh items
     var freshItemsCount: Int {
-        foodItems.filter { !$0.isExpiringSoon && !$0.isExpired }.count
+        dataService.freshItemsCount
     }
     
     // MARK: - Helper Methods
@@ -171,7 +195,7 @@ final class FridgeViewModel: ObservableObject {
     
     /// Refresh data
     func refresh() {
-        loadMockData()
+        dataService.loadFromStorage()
     }
     
     /// Clear search
@@ -186,53 +210,41 @@ final class FridgeViewModel: ObservableObject {
     
     // MARK: - CRUD Operations
     
+    /// Add a new item to the fridge
+    func addItem(_ item: FoodItem) {
+        dataService.addItem(item)
+    }
+    
+    /// Add multiple items to the fridge
+    func addItems(_ items: [FoodItem]) {
+        dataService.addItems(items)
+    }
+    
     /// Update an existing item
     func updateItem(_ item: FoodItem, with updates: ItemUpdate) {
-        guard let index = foodItems.firstIndex(where: { $0.id == item.id }) else { return }
-        
-        var updatedItem = item
-        
-        if let name = updates.name { updatedItem.name = name }
-        if let category = updates.category { updatedItem.category = category }
-        if let quantity = updates.quantity { updatedItem.quantity = quantity }
-        if let unit = updates.unit { updatedItem.unit = unit }
-        if let expirationDate = updates.expirationDate { updatedItem.expirationDate = expirationDate }
-        if let zoneTag = updates.zoneTag { updatedItem.zoneTag = zoneTag }
-        if let storage = updates.storage { updatedItem.storage = storage }
-        
-        foodItems[index] = updatedItem
-        saveChanges()
+        dataService.updateItem(item, with: updates)
     }
     
     /// Validate item data
     func validateItemData(_ item: FoodItem) -> Bool {
-        return !item.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-               item.quantity > 0
+        return dataService.validateItem(item)
     }
     
     /// Remove a single item
     func removeItem(_ item: FoodItem, reason: RemovalReason) {
-        foodItems.removeAll { $0.id == item.id }
-        saveChanges()
-        
-        // Here you could track analytics for removal reasons
-        print("Item '\(item.name)' removed: \(reason.rawValue)")
+        dataService.removeItem(item, reason: reason)
     }
     
     /// Remove multiple items
     func removeItems(_ items: [FoodItem], reason: RemovalReason) {
-        let itemIds = Set(items.map { $0.id })
-        foodItems.removeAll { itemIds.contains($0.id) }
+        dataService.removeItems(items, reason: reason)
         clearSelection()
-        saveChanges()
-        
-        print("\(items.count) items removed: \(reason.rawValue)")
     }
     
     /// Remove selected items
     func removeSelectedItems(reason: RemovalReason) {
-        let itemsToRemove = foodItems.filter { selectedItems.contains($0.id) }
-        removeItems(itemsToRemove, reason: reason)
+        dataService.removeItems(withIds: selectedItems, reason: reason)
+        clearSelection()
     }
     
     // MARK: - Selection Management
@@ -297,96 +309,4 @@ final class FridgeViewModel: ObservableObject {
         }
     }
     
-    // MARK: - Data Persistence
-    
-    /// Save changes (mock implementation)
-    private func saveChanges() {
-        // In production, this would save to Core Data
-        // For now, changes persist in memory during session
-        print("Changes saved to mock data store")
-    }
-}
-
-// MARK: - Supporting Types
-
-/// Filter options for fridge items
-enum FridgeFilter: String, CaseIterable, Identifiable {
-    case all = "All"
-    case expiring = "Expiring"
-    case expired = "Expired"
-    case fresh = "Fresh"
-    
-    var id: String { rawValue }
-    
-    var displayName: String {
-        rawValue
-    }
-    
-    var sfSymbol: String {
-        switch self {
-        case .all: return "square.grid.2x2"
-        case .expiring: return "clock.badge.exclamationmark"
-        case .expired: return "exclamationmark.triangle"
-        case .fresh: return "checkmark.circle"
-        }
-    }
-}
-
-/// Mock data types for testing different states
-enum MockDataType: String, CaseIterable {
-    case comprehensive = "Comprehensive"
-    case minimal = "Minimal"
-    case fresh = "Fresh Only"
-    case empty = "Empty"
-}
-
-/// Removal reasons for analytics
-enum RemovalReason: String, CaseIterable, Identifiable {
-    case consumed = "Used it up"
-    case wasted = "Had to toss it"
-    
-    var id: String { rawValue }
-    
-    var icon: String {
-        switch self {
-        case .consumed: return "checkmark.circle.fill"
-        case .wasted: return "xmark.circle.fill"
-        }
-    }
-    
-    var color: Color {
-        switch self {
-        case .consumed: return .sageGreen
-        case .wasted: return .softCoral
-        }
-    }
-}
-
-/// Structure for item updates
-struct ItemUpdate {
-    let name: String?
-    let category: FoodCategory?
-    let quantity: Double?
-    let unit: FoodUnit?
-    let expirationDate: Date?
-    let zoneTag: String?
-    let storage: String?
-    
-    init(
-        name: String? = nil,
-        category: FoodCategory? = nil,
-        quantity: Double? = nil,
-        unit: FoodUnit? = nil,
-        expirationDate: Date? = nil,
-        zoneTag: String? = nil,
-        storage: String? = nil
-    ) {
-        self.name = name
-        self.category = category
-        self.quantity = quantity
-        self.unit = unit
-        self.expirationDate = expirationDate
-        self.zoneTag = zoneTag
-        self.storage = storage
-    }
 }
