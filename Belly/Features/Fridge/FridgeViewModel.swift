@@ -21,10 +21,12 @@ final class FridgeViewModel: ObservableObject {
     @Published var isSelectionMode = false
     @Published var selectedItems: Set<UUID> = []
     @Published var isGeneratingRecipes = false
+    @Published var generatedRecipes: [Recipe] = []
     
     // MARK: - Data Service
     
     @ObservedObject private var dataService = FridgeDataService.shared
+    private let openAIService = OpenAIService()
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
@@ -291,21 +293,73 @@ final class FridgeViewModel: ObservableObject {
     
     // MARK: - Recipe Generation
     
-    /// Generate recipes from expiring items
+    /// Generate recipes prioritizing expiring items while considering all available ingredients
     func generateRecipes() -> [Recipe] {
+        // Get all available ingredients
+        let allIngredients = foodItems.map { $0.name }
         let expiringIngredients = expiringItems.map { $0.name }
         
-        // Mock recipe generation - would use AI/API in production
-        return RecipeGenerator.generateRecipes(from: expiringIngredients)
+        // If we have expiring items, prioritize them with AI generation
+        if !expiringIngredients.isEmpty {
+            return RecipeGenerator.generateSmartRecipes(
+                expiringIngredients: expiringIngredients,
+                allAvailableIngredients: allIngredients
+            )
+        } else {
+            // Fallback to basic recipe generation if no expiring items
+            return RecipeGenerator.generateRecipes(from: allIngredients)
+        }
     }
     
-    /// Start recipe generation process
+    /// Start recipe generation process with AI
     func startRecipeGeneration() {
+        print("🚀 Starting AI recipe generation...")
         isGeneratingRecipes = true
         
-        // Simulate API call delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.isGeneratingRecipes = false
+        // Clear any existing recipes
+        generatedRecipes = []
+        
+        // Use AI service for smart recipe generation
+        Task {
+            do {
+                let allIngredients = foodItems.map { $0.name }
+                let expiringIngredients = expiringItems.map { $0.name }
+                
+                print("📋 Recipe generation inputs:")
+                print("   All ingredients: \(allIngredients)")
+                print("   Expiring ingredients: \(expiringIngredients)")
+                
+                // Generate smart recipes using AI service
+                let recipes = try await openAIService.generateSmartRecipes(
+                    expiringIngredients: expiringIngredients,
+                    allAvailableIngredients: allIngredients
+                )
+                
+                await MainActor.run {
+                    self.isGeneratingRecipes = false
+                    // Store generated recipes for display
+                    self.generatedRecipes = recipes
+                    
+                    print("🎯 Recipe generation completed:")
+                    print("   Generated \(recipes.count) recipes")
+                    for (index, recipe) in recipes.enumerated() {
+                        print("   Recipe \(index + 1): \(recipe.title)")
+                    }
+                    
+                    // Log if no recipes were found
+                    if recipes.isEmpty {
+                        print("⚠️ No recipes found that use expiring ingredients")
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.isGeneratingRecipes = false
+                    // Clear recipes on error instead of using mock fallback
+                    self.generatedRecipes = []
+                }
+                print("❌ AI recipe generation failed: \(error)")
+                print("❌ Error details: \(error.localizedDescription)")
+            }
         }
     }
     

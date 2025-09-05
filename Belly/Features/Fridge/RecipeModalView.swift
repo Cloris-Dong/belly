@@ -14,25 +14,58 @@ struct RecipeModalView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
+            VStack(spacing: 0) {
+                // Sticky header - styled like Fridge page
+                ZStack {
+                    // Centered title
+                    Text("Recipe Ideas")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primaryText)
+                        .frame(maxWidth: .infinity)
+                    
+                    // Close button on the right
+                    HStack {
+                        Spacer()
+                        
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.gray)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.top, DesignSystem.Spacing.xl)
+                .padding(.horizontal, DesignSystem.Spacing.lg)
+                .padding(.bottom, DesignSystem.Spacing.md)
+                
+                // Content area - seamless with header
                 if isGenerating {
-                    // Loading state
+                    // Loading state - centered outside ScrollView
                     loadingView
                 } else if recipes.isEmpty {
-                    // Empty state
+                    // Empty state - centered outside ScrollView
                     emptyStateView
                 } else {
-                    // Recipes list
-                    recipesScrollView
+                    // Recipes list - scrollable content
+                    ScrollView {
+                        recipesScrollView
+                    }
                 }
             }
-            .navigationTitle("Recipe Ideas")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
+            .background(Color.creamWhite)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(Color.lightSageGreen, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .navigationBarBackButtonHidden()
+            .onAppear {
+                print("📱 RecipeModalView appeared with \(recipes.count) recipes")
+                for (index, recipe) in recipes.enumerated() {
+                    print("📱 Recipe \(index + 1): \(recipe.title)")
                 }
             }
         }
@@ -41,50 +74,64 @@ struct RecipeModalView: View {
     // MARK: - Loading View
     
     private var loadingView: some View {
-        VStack(spacing: DesignSystem.Spacing.xl) {
-            ProgressView()
-                .scaleEffect(1.5)
-                .progressViewStyle(CircularProgressViewStyle(tint: .oceanBlue))
+        VStack {
+            Spacer()
             
-            Text("Generating recipe ideas...")
-                .font(.headline)
-                .foregroundColor(.primaryText)
+            VStack(spacing: DesignSystem.Spacing.xl) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .progressViewStyle(CircularProgressViewStyle(tint: .sageGreen))
+                
+                Text("Generating recipe ideas...")
+                    .font(.headline)
+                    .foregroundColor(.primaryText)
+                
+                Text("Finding delicious ways to use your expiring items")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(DesignSystem.Spacing.xl)
             
-            Text("Finding delicious ways to use your expiring items")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+            Spacer()
         }
-        .padding(DesignSystem.Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Empty State View
     
     private var emptyStateView: some View {
-        VStack(spacing: DesignSystem.Spacing.lg) {
-            Image(systemName: "book.cookbook")
-                .font(.system(size: 48))
-                .foregroundColor(.oceanBlue)
+        VStack {
+            Spacer()
             
-            Text("No Recipes Found")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(.primaryText)
+            VStack(spacing: DesignSystem.Spacing.lg) {
+                Image(systemName: "book.cookbook")
+                    .font(.system(size: 48))
+                    .foregroundColor(.sageGreen)
+                
+                Text("No Recipes Found")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
+                
+                Text("We couldn't find recipes that use your expiring ingredients. Try adding more diverse items to your fridge or check back when you have different expiring items!")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+            }
+            .padding(DesignSystem.Spacing.xl)
             
-            Text("We couldn't find recipes matching your current ingredients. Try adding more items to your fridge!")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, DesignSystem.Spacing.lg)
+            Spacer()
         }
-        .padding(DesignSystem.Spacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Recipes Scroll View
     
     private var recipesScrollView: some View {
         ScrollView {
-            LazyVStack(spacing: DesignSystem.Spacing.lg) {
+            VStack(spacing: DesignSystem.Spacing.lg) {
                 // Header with ingredient info
                 if !recipes.isEmpty {
                     ingredientsHeaderView
@@ -111,6 +158,7 @@ struct RecipeModalView: View {
                 Text("Using Your Expiring Items")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
                 
                 Spacer()
             }
@@ -153,6 +201,8 @@ struct RecipeCard: View {
                             Text(recipe.category.emoji)
                             Text(recipe.category.rawValue)
                                 .font(.caption)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                         
                         Text("•")
@@ -165,19 +215,23 @@ struct RecipeCard: View {
                                 .font(.caption)
                             Text(recipe.cookingTime)
                                 .font(.caption)
+                                .lineLimit(1)
                         }
                         
                         Text("•")
                             .foregroundColor(.secondary)
                             .font(.caption)
                         
-                        // Servings
+                        // Servings - with flexible layout
                         HStack(spacing: 4) {
                             Image(systemName: "person.2")
                                 .font(.caption)
                             Text("\(recipe.servings) servings")
                                 .font(.caption)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .foregroundColor(.secondary)
                 }
@@ -191,15 +245,6 @@ struct RecipeCard: View {
             // Used ingredients (if any)
             if !recipe.usedIngredients.isEmpty {
                 usedIngredientsView
-            }
-            
-            // Expandable content
-            if isExpanded {
-                expandedContent
-                    .transition(.asymmetric(
-                        insertion: .opacity.combined(with: .move(edge: .top)),
-                        removal: .opacity
-                    ))
             }
             
             // Expand/collapse button
@@ -217,10 +262,17 @@ struct RecipeCard: View {
                     
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.caption)
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
                 }
-                .foregroundColor(.oceanBlue)
+                .foregroundColor(.sageGreen)
             }
             .buttonStyle(.plain)
+            
+            // Expandable content
+            if isExpanded {
+                expandedContent
+                    .transition(.opacity)
+            }
         }
         .padding(DesignSystem.Spacing.lg)
         .background(
@@ -290,22 +342,25 @@ struct RecipeCard: View {
     private var expandedContent: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.lg) {
             Divider()
+                .padding(.top, DesignSystem.Spacing.sm)
             
             // Ingredients list
             VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                 Text("Ingredients")
                     .font(.subheadline)
                     .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
                 
                 ForEach(Array(recipe.ingredients.enumerated()), id: \.offset) { index, ingredient in
                     HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
                         Text("•")
-                            .foregroundColor(.oceanBlue)
+                            .foregroundColor(.sageGreen)
                             .fontWeight(.semibold)
                         
                         Text(ingredient)
                             .font(.subheadline)
                             .foregroundColor(.primaryText)
+                            .fixedSize(horizontal: false, vertical: true)
                         
                         Spacer()
                     }
@@ -319,24 +374,28 @@ struct RecipeCard: View {
                 Text("Instructions")
                     .font(.subheadline)
                     .fontWeight(.semibold)
+                    .foregroundColor(.primaryText)
                 
                 ForEach(Array(recipe.instructions.enumerated()), id: \.offset) { index, instruction in
                     HStack(alignment: .top, spacing: DesignSystem.Spacing.sm) {
                         Text("\(index + 1).")
                             .font(.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundColor(.oceanBlue)
+                            .foregroundColor(.sageGreen)
                             .frame(minWidth: 20, alignment: .leading)
                         
                         Text(instruction)
                             .font(.subheadline)
                             .foregroundColor(.primaryText)
+                            .fixedSize(horizontal: false, vertical: true)
                         
                         Spacer()
                     }
                 }
             }
         }
+        .padding(.top, DesignSystem.Spacing.sm)
+        .clipped() // Prevent content from overflowing
     }
 }
 

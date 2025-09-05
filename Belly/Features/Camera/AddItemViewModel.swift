@@ -20,13 +20,15 @@ class AddItemViewModel: ObservableObject {
     @Published var showingGallery = false
     @Published var showingManualEntry = false
     
-    private let aiManager = AIManager()
+    let aiManager = AIManager()
     
     enum ErrorType {
         case noItemsDetected
         case networkError
         case processingError
         case cameraError
+        case rateLimitExceeded
+        case configurationError
     }
     
     // MARK: - Camera Flow Management
@@ -39,38 +41,26 @@ class AddItemViewModel: ObservableObject {
             selectedImage = image
         }
         
-        // DISABLED: Network check and unfound food item error messages for now
-        // Always return success scenario
-        let scenario = "success"
-        
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        // Use the AI manager to process the image with real OpenAI API
+        let results = await aiManager.processImage(image)
         
         await MainActor.run {
             self.isProcessing = false
             
-            switch scenario {
-            case "success":
-                self.detectedItems = [
-                    DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")
-                ]
+            if results.isEmpty {
+                // Check if there was an error in the AI manager
+                if let aiError = aiManager.error {
+                    self.errorMessage = aiError
+                    self.errorType = .processingError
+                } else {
+                    // No items detected
+                    self.errorMessage = "No food items could be identified in this image. Try taking a clearer photo with better lighting, or add items manually."
+                    self.errorType = .noItemsDetected
+                }
+            } else {
+                // Success - items detected
+                self.detectedItems = results
                 self.showingResults = true
-                
-            case "no_items":
-                // DISABLED: No items detected error
-                self.detectedItems = [
-                    DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")
-                ]
-                self.showingResults = true
-                
-            case "network_error":
-                // DISABLED: Network error - always return success
-                self.detectedItems = [
-                    DetectedFood(name: "Mock Item", category: "Vegetables", shelfLifeDays: 7, storage: "Refrigerator", location: "Middle Shelf", confidence: 0.9, quantity: 1.0, unit: "pieces")
-                ]
-                self.showingResults = true
-                
-            default:
-                break
             }
         }
     }

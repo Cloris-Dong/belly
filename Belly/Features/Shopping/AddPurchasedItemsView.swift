@@ -150,7 +150,7 @@ struct ManualEntryForPurchasedView: View {
                     // All items processed
                     VStack(spacing: 16) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
+                            .font(.system(size: 36))
                             .foregroundColor(.green)
                         
                         Text("All items processed!")
@@ -188,10 +188,13 @@ struct ManualEntryForPurchasedView: View {
     }
     
     private func addItemToFridge(_ groceryItem: GroceryItem) {
+        // Smart category detection based on item name
+        let detectedCategory = detectCategoryFromName(groceryItem.name)
+        
         // Convert GroceryItem to FoodItem and add to fridge
         let foodItem = FoodItem(
             name: groceryItem.name,
-            category: FoodCategory.allCases.first { $0.rawValue == "Other" } ?? .other,
+            category: detectedCategory,
             quantity: groceryItem.quantity,
             unit: FoodUnit.allCases.first { $0.rawValue == groceryItem.unit } ?? .pieces,
             expirationDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date(),
@@ -203,7 +206,87 @@ struct ManualEntryForPurchasedView: View {
         // Add to fridge view model
         fridgeViewModel.foodItems.append(foodItem)
         
+        print("🎯 Auto-selected category: \(detectedCategory.rawValue) for shopping item: \(groceryItem.name)")
         print("Added to fridge: \(groceryItem.name) \(groceryItem.quantity) \(groceryItem.unit)")
+    }
+    
+    // MARK: - Smart Category Detection
+    
+    private func detectCategoryFromName(_ name: String) -> FoodCategory {
+        let itemName = name.lowercased()
+        
+        // Dairy products
+        if itemName.contains("milk") || itemName.contains("yogurt") || itemName.contains("cheese") || 
+           itemName.contains("butter") || itemName.contains("cream") || itemName.contains("sour cream") ||
+           itemName.contains("cottage") || itemName.contains("mozzarella") || itemName.contains("cheddar") ||
+           itemName.contains("feta") || itemName.contains("parmesan") || itemName.contains("ricotta") {
+            return .dairy
+        }
+        // Fruits
+        else if itemName.contains("apple") || itemName.contains("banana") || itemName.contains("fruit") ||
+                itemName.contains("orange") || itemName.contains("lemon") || itemName.contains("lime") ||
+                itemName.contains("grape") || itemName.contains("strawberry") || itemName.contains("blueberry") ||
+                itemName.contains("raspberry") || itemName.contains("peach") || itemName.contains("pear") ||
+                itemName.contains("plum") || itemName.contains("cherry") || itemName.contains("kiwi") ||
+                itemName.contains("mango") || itemName.contains("pineapple") || itemName.contains("avocado") {
+            return .fruits
+        }
+        // Vegetables
+        else if itemName.contains("lettuce") || itemName.contains("spinach") || itemName.contains("vegetable") ||
+                itemName.contains("carrot") || itemName.contains("celery") || itemName.contains("onion") ||
+                itemName.contains("garlic") || itemName.contains("tomato") || itemName.contains("cucumber") ||
+                itemName.contains("pepper") || itemName.contains("broccoli") || itemName.contains("cauliflower") ||
+                itemName.contains("cabbage") || itemName.contains("potato") || itemName.contains("sweet potato") ||
+                itemName.contains("mushroom") || itemName.contains("zucchini") || itemName.contains("eggplant") ||
+                itemName.contains("asparagus") || itemName.contains("green bean") || itemName.contains("corn") {
+            return .vegetables
+        }
+        // Meat
+        else if itemName.contains("chicken") || itemName.contains("beef") || itemName.contains("pork") ||
+                itemName.contains("lamb") || itemName.contains("turkey") || itemName.contains("ham") ||
+                itemName.contains("bacon") || itemName.contains("sausage") || itemName.contains("fish") ||
+                itemName.contains("salmon") || itemName.contains("tuna") || itemName.contains("shrimp") ||
+                itemName.contains("crab") || itemName.contains("lobster") || itemName.contains("meat") {
+            return .meat
+        }
+        // Beverages
+        else if itemName.contains("juice") || itemName.contains("soda") || itemName.contains("water") ||
+                itemName.contains("beer") || itemName.contains("wine") || itemName.contains("coffee") ||
+                itemName.contains("tea") || itemName.contains("smoothie") || itemName.contains("energy drink") ||
+                itemName.contains("sports drink") || itemName.contains("coconut water") {
+            return .beverages
+        }
+        // Pantry items
+        else if itemName.contains("bread") || itemName.contains("cereal") || itemName.contains("pasta") ||
+                itemName.contains("rice") || itemName.contains("flour") || itemName.contains("sugar") ||
+                itemName.contains("salt") || itemName.contains("pepper") || itemName.contains("spice") ||
+                itemName.contains("herb") || itemName.contains("oil") || itemName.contains("vinegar") ||
+                itemName.contains("sauce") || itemName.contains("soup") || itemName.contains("canned") ||
+                itemName.contains("jar") || itemName.contains("box") || itemName.contains("bag") {
+            return .pantry
+        }
+        // Frozen items
+        else if itemName.contains("frozen") || itemName.contains("ice cream") || itemName.contains("frozen") ||
+                itemName.contains("frozen fruit") || itemName.contains("frozen vegetable") ||
+                itemName.contains("frozen meal") || itemName.contains("frozen pizza") {
+            return .frozen
+        }
+        // Leftovers
+        else if itemName.contains("leftover") || itemName.contains("cooked") || itemName.contains("prepared") ||
+                itemName.contains("meal") || itemName.contains("dinner") || itemName.contains("lunch") {
+            return .leftovers
+        }
+        // Condiments
+        else if itemName.contains("ketchup") || itemName.contains("mustard") || itemName.contains("mayo") ||
+                itemName.contains("mayonnaise") || itemName.contains("relish") || itemName.contains("pickle") ||
+                itemName.contains("jam") || itemName.contains("jelly") || itemName.contains("honey") ||
+                itemName.contains("syrup") || itemName.contains("dressing") || itemName.contains("salsa") {
+            return .condiments
+        }
+        // Default fallback
+        else {
+            return .other
+        }
     }
     
     private func nextItem() {

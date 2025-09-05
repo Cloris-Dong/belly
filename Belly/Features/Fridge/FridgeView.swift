@@ -19,62 +19,65 @@ struct FridgeView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                LazyVStack(spacing: DesignSystem.Spacing.xl) {
-                    // Custom header - styled like shopping page
-                    ZStack {
-                        // Centered title
-                        Text("Fridge")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primaryText)
-                            .frame(maxWidth: .infinity)
+            VStack(spacing: 0) {
+                // Sticky header - styled like shopping page
+                ZStack {
+                    // Centered title
+                    Text("Fridge")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primaryText)
+                        .frame(maxWidth: .infinity)
+                    
+                    // Selection button on the right
+                    HStack {
+                        Spacer()
                         
-                        // Selection button on the right
-                        HStack {
-                            Spacer()
-                            
-                            if !viewModel.foodItems.isEmpty {
-                                Button(action: {
-                                    withAnimation(.easeInOut(duration: 0.3)) {
-                                        toggleSelectionMode()
-                                    }
-                                }) {
-                                    Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checklist")
-                                        .font(.title3)
-                                        .foregroundColor(.oceanBlue)
-                                        .frame(width: 36, height: 36)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                                                .fill(Color(.systemBackground).opacity(0.2))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                                                        .stroke(Color(.systemGray5).opacity(0.3), lineWidth: 0.5)
-                                                )
-                                        )
-                                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                        if !viewModel.foodItems.isEmpty {
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    toggleSelectionMode()
                                 }
-                                .buttonStyle(.plain)
+                            }) {
+                                Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checklist")
+                                    .font(.title3)
+                                    .foregroundColor(.oceanBlue)
+                                    .frame(width: 36, height: 36)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                                            .fill(Color(.systemBackground).opacity(0.2))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                                                    .stroke(Color(.systemGray5).opacity(0.3), lineWidth: 0.5)
+                                            )
+                                    )
+                                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
                             }
+                            .buttonStyle(.plain)
                         }
                     }
-                    .padding(.top, DesignSystem.Spacing.xl)
-                    .padding(.horizontal, DesignSystem.Spacing.lg)
-                    .padding(.bottom, DesignSystem.Spacing.md)
-                    
-                    // Expired Section (if any expired items exist)
-                    if !viewModel.expiredItems.isEmpty {
-                        expiredSection
-                    }
-                    
-                    // Expiring Soon Section
-                    expiringSoonSection
-                    
-                    // Food Categories Section
-                    categoriesSection
                 }
+                .padding(.top, DesignSystem.Spacing.xl)
                 .padding(.horizontal, DesignSystem.Spacing.lg)
-                .padding(.top, DesignSystem.Spacing.sm)
+                .padding(.bottom, DesignSystem.Spacing.md)
+                
+                // Scrollable content
+                ScrollView {
+                    LazyVStack(spacing: DesignSystem.Spacing.xl) {
+                        // Expired Section (if any expired items exist)
+                        if !viewModel.expiredItems.isEmpty {
+                            expiredSection
+                        }
+                        
+                        // Expiring Soon Section
+                        expiringSoonSection
+                        
+                        // Food Categories Section
+                        categoriesSection
+                    }
+                    .padding(.horizontal, DesignSystem.Spacing.lg)
+                    .padding(.top, DesignSystem.Spacing.sm)
+                }
             }
             .background(Color.appBackground)
             .navigationBarTitleDisplayMode(.inline)
@@ -104,7 +107,7 @@ struct FridgeView: View {
             }
             .sheet(isPresented: $showingRecipes) {
                 RecipeModalView(
-                    recipes: viewModel.generateRecipes(),
+                    recipes: viewModel.generatedRecipes,
                     isGenerating: viewModel.isGeneratingRecipes
                 )
             }

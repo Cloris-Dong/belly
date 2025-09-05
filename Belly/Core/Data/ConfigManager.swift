@@ -18,10 +18,7 @@ final class ConfigManager {
     
     // MARK: - API Keys
     
-    /// OpenAI API key for AI features
-    var openAIAPIKey: String? {
-        getValue(for: "OPENAI_API_KEY")
-    }
+    // OpenAI API key no longer needed - using backend service
     
     /// Google API key for location services
     var googleAPIKey: String? {
@@ -78,7 +75,6 @@ final class ConfigManager {
         
         // Check for required keys (add more as needed)
         let requiredKeys = [
-            "OPENAI_API_KEY",
             "FIREBASE_PROJECT_ID"
         ]
         
@@ -106,7 +102,6 @@ extension ConfigManager {
         print("📋 Available Configuration Keys:")
         
         let keys = [
-            "OPENAI_API_KEY",
             "GOOGLE_API_KEY", 
             "FIREBASE_PROJECT_ID",
             "DEBUG_MODE",

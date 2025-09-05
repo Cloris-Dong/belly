@@ -8,7 +8,7 @@
 import Foundation
 
 /// Recipe model for generated recipes from expiring ingredients
-struct Recipe: Identifiable, Hashable {
+struct Recipe: Identifiable, Hashable, Codable {
     let id = UUID()
     let title: String
     let cookingTime: String
@@ -41,7 +41,7 @@ struct Recipe: Identifiable, Hashable {
 }
 
 /// Recipe difficulty levels
-enum RecipeDifficulty: String, CaseIterable, Identifiable {
+enum RecipeDifficulty: String, CaseIterable, Identifiable, Codable {
     case easy = "Easy"
     case medium = "Medium"
     case hard = "Hard"
@@ -66,7 +66,7 @@ enum RecipeDifficulty: String, CaseIterable, Identifiable {
 }
 
 /// Recipe categories
-enum RecipeCategory: String, CaseIterable, Identifiable {
+enum RecipeCategory: String, CaseIterable, Identifiable, Codable {
     case breakfast = "Breakfast"
     case lunch = "Lunch"
     case dinner = "Dinner"

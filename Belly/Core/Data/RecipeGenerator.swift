@@ -10,6 +10,115 @@ import Foundation
 /// Generates recipes from available ingredients (mock implementation)
 final class RecipeGenerator {
     
+    /// Generate smart recipes ensuring every expiring ingredient is covered at least once
+    static func generateSmartRecipes(expiringIngredients: [String], allAvailableIngredients: [String]) -> [Recipe] {
+        let cleanExpiring = expiringIngredients.map { $0.lowercased() }
+        let cleanAll = allAvailableIngredients.map { $0.lowercased() }
+        var selectedRecipes: [Recipe] = []
+        var coveredExpiringItems = Set<String>()
+        
+        // First pass: Find all candidate recipes that use expiring ingredients
+        var candidateRecipes: [Recipe] = []
+        
+        for template in recipeTemplates {
+            let expiringMatches = template.requiredIngredients.filter { ingredient in
+                cleanExpiring.contains { expiringIngredient in
+                    expiringIngredient.contains(ingredient) || ingredient.contains(expiringIngredient)
+                }
+            }
+            
+            let allMatches = template.requiredIngredients.filter { ingredient in
+                cleanAll.contains { availableIngredient in
+                    availableIngredient.contains(ingredient) || ingredient.contains(availableIngredient)
+                }
+            }
+            
+            // Only include recipes that use at least one expiring ingredient
+            if !expiringMatches.isEmpty && allMatches.count >= template.minRequiredMatches {
+                let recipe = Recipe(
+                    title: "🍃 \(template.title)", // Add emoji to indicate it uses expiring items
+                    cookingTime: template.cookingTime,
+                    servings: template.servings,
+                    ingredients: template.ingredients,
+                    instructions: template.instructions,
+                    difficulty: template.difficulty,
+                    category: template.category,
+                    usedIngredients: expiringMatches + allMatches.filter { !expiringMatches.contains($0) }
+                )
+                candidateRecipes.append(recipe)
+            }
+        }
+        
+        // If no recipes use expiring ingredients, return empty array
+        guard !candidateRecipes.isEmpty else {
+            print("⚠️ No recipes found that use expiring ingredients")
+            return []
+        }
+        
+        // Sort candidates by expiring ingredient usage, then by total matches
+        candidateRecipes.sort { recipe1, recipe2 in
+            let expiring1 = recipe1.usedIngredients.filter { cleanExpiring.contains($0.lowercased()) }.count
+            let expiring2 = recipe2.usedIngredients.filter { cleanExpiring.contains($0.lowercased()) }.count
+            
+            if expiring1 != expiring2 {
+                return expiring1 > expiring2
+            }
+            
+            let total1 = recipe1.usedIngredients.count
+            let total2 = recipe2.usedIngredients.count
+            return total1 > total2
+        }
+        
+        // Second pass: Select recipes to ensure all expiring items are covered
+        for recipe in candidateRecipes {
+            let recipeExpiringItems = recipe.usedIngredients.filter { cleanExpiring.contains($0.lowercased()) }
+            let newExpiringItems = recipeExpiringItems.filter { !coveredExpiringItems.contains($0) }
+            
+            // Add recipe if it covers new expiring items or if we haven't reached the minimum
+            if !newExpiringItems.isEmpty || selectedRecipes.count < 2 {
+                selectedRecipes.append(recipe)
+                coveredExpiringItems.formUnion(recipeExpiringItems)
+                
+                // Stop if we've covered all expiring items and have at least 3 recipes
+                if coveredExpiringItems.count >= cleanExpiring.count && selectedRecipes.count >= 3 {
+                    break
+                }
+            }
+        }
+        
+        // Third pass: If we still haven't covered all expiring items, add more recipes
+        if coveredExpiringItems.count < cleanExpiring.count {
+            for recipe in candidateRecipes {
+                if selectedRecipes.contains(where: { $0.id == recipe.id }) {
+                    continue // Skip already selected recipes
+                }
+                
+                let recipeExpiringItems = recipe.usedIngredients.filter { cleanExpiring.contains($0.lowercased()) }
+                let newExpiringItems = recipeExpiringItems.filter { !coveredExpiringItems.contains($0) }
+                
+                if !newExpiringItems.isEmpty {
+                    selectedRecipes.append(recipe)
+                    coveredExpiringItems.formUnion(recipeExpiringItems)
+                    
+                    // Stop if we've covered all expiring items or reached max recipes
+                    if coveredExpiringItems.count >= cleanExpiring.count || selectedRecipes.count >= 5 {
+                        break
+                    }
+                }
+            }
+        }
+        
+        // Log coverage information
+        print("📊 Recipe Coverage Report:")
+        print("   Total expiring items: \(cleanExpiring.count)")
+        print("   Covered expiring items: \(coveredExpiringItems.count)")
+        print("   Selected recipes: \(selectedRecipes.count)")
+        print("   Coverage: \(String(format: "%.1f", Double(coveredExpiringItems.count) / Double(cleanExpiring.count) * 100))%")
+        
+        // Limit to 5 recipes max
+        return Array(selectedRecipes.prefix(5))
+    }
+    
     /// Generate recipes from available ingredients
     static func generateRecipes(from ingredients: [String]) -> [Recipe] {
         let cleanIngredients = ingredients.map { $0.lowercased() }

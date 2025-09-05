@@ -7,11 +7,53 @@
 
 import SwiftUI
 import Foundation
+import Combine
 
 class AIManager: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var detectedItems: [DetectedFood] = []
+    @Published var isRetrying = false
+    @Published var retryMessage = ""
+    
+    // MARK: - AI Service Integration
+    private let openAIService: OpenAIService
+    private var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        self.openAIService = OpenAIService()
+        
+        // Observe retry status changes from the OpenAI service
+        openAIService.$isRetrying
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                self?.isRetrying = value
+            }
+            .store(in: &cancellables)
+        
+        openAIService.$retryMessage
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                self?.retryMessage = value
+            }
+            .store(in: &cancellables)
+    }
+    
+    /// Check if real AI is available and configured
+    var useRealAI: Bool {
+        return openAIService.isConfigured
+    }
+    
+    /// Check if real AI is available for the UI
+    var isRealAIAvailable: Bool {
+        return openAIService.isConfigured
+    }
+    
+    /// Get AI service for direct access to controls
+    var aiService: OpenAIService {
+        return openAIService
+    }
+    
     
     // MARK: - Mock Food Detection
     
@@ -158,21 +200,53 @@ class AIManager: ObservableObject {
         await MainActor.run {
             isLoading = true
             error = nil
+            isRetrying = false
+            retryMessage = ""
         }
         
         do {
-            let results = await identifyFoodMock(from: image)
+            let results: [DetectedFood]
+            
+            if useRealAI {
+                // Use real OpenAI service
+                results = try await openAIService.detectFood(from: image)
+            } else {
+                // Fall back to mock data
+                results = await identifyFoodMock(from: image)
+            }
             
             await MainActor.run {
                 detectedItems = results
                 isLoading = false
+                isRetrying = false
+                retryMessage = ""
             }
             
             return results
         } catch {
             await MainActor.run {
-                self.error = "Failed to process image: \(error.localizedDescription)"
+                // Show generic error message without exposing API details
+                if useRealAI {
+                    if let openAIError = error as? OpenAIError {
+                        switch openAIError {
+                        case .networkError:
+                            self.error = "No internet connection available"
+                        case .rateLimitExceeded:
+                            self.error = "AI usage limit reached. Please try again later."
+                        case .invalidInput:
+                            self.error = "Unable to process this image"
+                        default:
+                            self.error = "AI service temporarily unavailable"
+                        }
+                    } else {
+                        self.error = "AI service temporarily unavailable"
+                    }
+                } else {
+                    self.error = "Failed to process image: \(error.localizedDescription)"
+                }
                 isLoading = false
+                isRetrying = false
+                retryMessage = ""
             }
             return []
         }
@@ -182,20 +256,50 @@ class AIManager: ObservableObject {
         await MainActor.run {
             isLoading = true
             error = nil
+            isRetrying = false
+            retryMessage = ""
         }
         
         do {
-            let recipes = await generateRecipesMock(from: ingredients)
+            let recipes: [Recipe]
+            
+            if useRealAI {
+                // Use real OpenAI service
+                recipes = try await openAIService.generateRecipes(from: ingredients)
+            } else {
+                // Fall back to mock data
+                recipes = await generateRecipesMock(from: ingredients)
+            }
             
             await MainActor.run {
                 isLoading = false
+                isRetrying = false
+                retryMessage = ""
             }
             
             return recipes
         } catch {
             await MainActor.run {
-                self.error = "Failed to generate recipes: \(error.localizedDescription)"
+                // Show generic error message without exposing API details
+                if useRealAI {
+                    if let openAIError = error as? OpenAIError {
+                        switch openAIError {
+                        case .networkError:
+                            self.error = "No internet connection available"
+                        case .rateLimitExceeded:
+                            self.error = "AI usage limit reached. Please try again later."
+                        default:
+                            self.error = "AI service temporarily unavailable"
+                        }
+                    } else {
+                        self.error = "AI service temporarily unavailable"
+                    }
+                } else {
+                    self.error = "Failed to generate recipes: \(error.localizedDescription)"
+                }
                 isLoading = false
+                isRetrying = false
+                retryMessage = ""
             }
             return []
         }

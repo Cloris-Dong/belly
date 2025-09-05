@@ -179,14 +179,31 @@ struct AddItemView: View {
                         }
                     }
                 }
+            } else if viewModel.errorType == .noItemsDetected {
+                Button("Try Different Photo") {
+                    viewModel.clearError()
+                    // Keep camera open for user to try again
+                }
+            } else if viewModel.errorType == .rateLimitExceeded || viewModel.errorType == .configurationError {
+                Button("OK") {
+                    viewModel.clearError()
+                }
+            } else { // Generic processing error
+                Button("Retry") {
+                    if let image = viewModel.selectedImage {
+                        Task {
+                            await viewModel.processImage(image)
+                        }
+                    }
+                }
             }
-            
+
             Button("Add Manually") {
                 showingManualEntry = true
                 viewModel.clearError()
             }
-            
-            Button("Cancel") {
+
+            Button("Cancel", role: .cancel) {
                 viewModel.clearError()
             }
         } message: {
@@ -204,12 +221,23 @@ struct AddItemView: View {
                 .scaleEffect(1.5)
                 .progressViewStyle(CircularProgressViewStyle(tint: .oceanBlue))
             
-            Text("Analyzing Image...")
-                .font(.headline)
-            
-            Text("Identifying food items using AI")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            if viewModel.aiManager.isRetrying {
+                Text("Connecting to AI service...")
+                    .font(.headline)
+                
+                if !viewModel.aiManager.retryMessage.isEmpty {
+                    Text(viewModel.aiManager.retryMessage)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                Text("Analyzing Image...")
+                    .font(.headline)
+                
+                Text("Identifying food items using AI")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding(24)
         .background(Color(.systemBackground))

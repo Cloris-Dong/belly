@@ -117,7 +117,7 @@ struct AIResultsView: View {
                 if showingSuccess {
                     VStack {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
+                            .font(.system(size: 36))
                             .foregroundColor(.green)
                         
                         Text("Added to Fridge!")
@@ -250,6 +250,9 @@ struct DetectedItemCard: View {
     @State private var showingDeleteAlert = false
     @State private var showingAddLocation = false
     @State private var newLocation = ""
+    @State private var hasAutoSelectedCategory = false
+    @State private var hasAutoSelectedUnit = false
+    @State private var hasAutoSelectedQuantity = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
@@ -497,6 +500,302 @@ struct DetectedItemCard: View {
             }
         } message: {
             Text("Enter a new fridge location (e.g., 'Wine Rack', 'Cheese Drawer')")
+        }
+        .onAppear {
+            // Auto-select the detected category if not already done
+            if !hasAutoSelectedCategory {
+                // Map the detected category to a valid FoodCategory enum value
+                let detectedCategoryEnum = FoodCategory.allCases.first { $0.rawValue.lowercased() == item.category.lowercased() } ?? 
+                                         FoodCategory.allCases.first { $0.rawValue.contains(item.category) || item.category.contains($0.rawValue) } ?? 
+                                         .other
+                
+                // Update the item's category to the mapped enum value
+                item.category = detectedCategoryEnum.rawValue
+                hasAutoSelectedCategory = true
+                
+                print("🎯 Auto-selected category: \(item.category) for detected item: \(item.name)")
+            }
+            
+            // Auto-select the most likely unit if not already done
+            if !hasAutoSelectedUnit {
+                let detectedUnit = detectUnitFromName(item.name, category: item.category)
+                item.unit = detectedUnit.rawValue
+                hasAutoSelectedUnit = true
+                
+                print("🎯 Auto-selected unit: \(item.unit) for detected item: \(item.name)")
+            }
+            
+            // Auto-select the most likely quantity if not already done
+            if !hasAutoSelectedQuantity {
+                let detectedQuantity = detectQuantityFromName(item.name, category: item.category, unit: item.unit)
+                item.quantity = detectedQuantity
+                hasAutoSelectedQuantity = true
+                
+                print("🎯 Auto-selected quantity: \(item.quantity) for detected item: \(item.name)")
+            }
+        }
+    }
+    
+    // MARK: - Smart Unit Detection
+    
+    private func detectUnitFromName(_ name: String, category: String) -> FoodUnit {
+        let itemName = name.lowercased()
+        let itemCategory = category.lowercased()
+        
+        // Weight-based items (typically sold by weight)
+        if itemName.contains("meat") || itemName.contains("chicken") || itemName.contains("beef") || 
+           itemName.contains("pork") || itemName.contains("fish") || itemName.contains("salmon") ||
+           itemName.contains("tuna") || itemName.contains("shrimp") || itemName.contains("lamb") ||
+           itemName.contains("turkey") || itemName.contains("ham") || itemName.contains("bacon") ||
+           itemName.contains("sausage") || itemName.contains("cheese") || itemName.contains("butter") ||
+           itemName.contains("flour") || itemName.contains("sugar") || itemName.contains("rice") ||
+           itemName.contains("pasta") || itemName.contains("nuts") || itemName.contains("seeds") ||
+           itemName.contains("coffee") || itemName.contains("tea") || itemName.contains("spices") ||
+           itemName.contains("herbs") || itemName.contains("salt") || itemName.contains("pepper") {
+            return .grams
+        }
+        
+        // Large weight items (typically sold by kg)
+        else if itemName.contains("watermelon") || itemName.contains("pumpkin") || itemName.contains("cabbage") ||
+                itemName.contains("large") || itemName.contains("whole") {
+            return .kilograms
+        }
+        
+        // Liquid items (typically sold in bottles)
+        else if itemName.contains("milk") || itemName.contains("juice") || itemName.contains("soda") ||
+                itemName.contains("water") || itemName.contains("oil") || itemName.contains("vinegar") ||
+                itemName.contains("sauce") || itemName.contains("dressing") || itemName.contains("syrup") ||
+                itemName.contains("honey") || itemName.contains("wine") || itemName.contains("beer") ||
+                itemName.contains("soup") || itemName.contains("broth") {
+            return .bottles
+        }
+        
+        // Packaged items
+        else if itemName.contains("yogurt") || itemName.contains("cream") || itemName.contains("sour cream") ||
+                itemName.contains("cottage") || itemName.contains("milk") || itemName.contains("eggs") ||
+                itemName.contains("tofu") || itemName.contains("tempeh") {
+            return .cartons
+        }
+        
+        // Canned items
+        else if itemName.contains("canned") || itemName.contains("beans") || itemName.contains("corn") ||
+                itemName.contains("tomatoes") || itemName.contains("soup") || itemName.contains("tuna") ||
+                itemName.contains("sardines") || itemName.contains("olives") || itemName.contains("pickles") {
+            return .cans
+        }
+        
+        // Packaged/pre-packaged items
+        else if itemName.contains("bread") || itemName.contains("bagels") || itemName.contains("muffins") ||
+                itemName.contains("crackers") || itemName.contains("cookies") || itemName.contains("chips") ||
+                itemName.contains("cereal") || itemName.contains("granola") || itemName.contains("bars") ||
+                itemName.contains("frozen") || itemName.contains("pizza") || itemName.contains("dumplings") ||
+                itemName.contains("wraps") || itemName.contains("tortillas") || itemName.contains("pita") ||
+                itemName.contains("spinach") || itemName.contains("lettuce") || itemName.contains("arugula") ||
+                itemName.contains("kale") || itemName.contains("herbs") || itemName.contains("mushrooms") {
+            return .packages
+        }
+        
+        // Individual items (typically sold by piece)
+        else if itemName.contains("apple") || itemName.contains("banana") || itemName.contains("orange") ||
+                itemName.contains("lemon") || itemName.contains("lime") || itemName.contains("peach") ||
+                itemName.contains("pear") || itemName.contains("plum") || itemName.contains("avocado") ||
+                itemName.contains("onion") || itemName.contains("garlic") || itemName.contains("potato") ||
+                itemName.contains("sweet potato") || itemName.contains("carrot") || itemName.contains("celery") ||
+                itemName.contains("cucumber") || itemName.contains("pepper") || itemName.contains("tomato") ||
+                itemName.contains("broccoli") || itemName.contains("cauliflower") || itemName.contains("cabbage") ||
+                itemName.contains("eggplant") || itemName.contains("zucchini") || itemName.contains("squash") ||
+                itemName.contains("corn") || itemName.contains("asparagus") || itemName.contains("mango") ||
+                itemName.contains("pineapple") || itemName.contains("kiwi") || itemName.contains("grape") ||
+                itemName.contains("strawberry") || itemName.contains("blueberry") || itemName.contains("cherry") {
+            return .pieces
+        }
+        
+        // Category-based fallbacks
+        else if itemCategory.contains("meat") || itemCategory.contains("dairy") {
+            return .grams
+        }
+        else if itemCategory.contains("beverages") {
+            return .bottles
+        }
+        else if itemCategory.contains("fruits") || itemCategory.contains("vegetables") {
+            return .pieces
+        }
+        else if itemCategory.contains("pantry") {
+            return .packages
+        }
+        
+        // Default fallback
+        else {
+            return .pieces
+        }
+    }
+    
+    // MARK: - Smart Quantity Detection
+    
+    private func detectQuantityFromName(_ name: String, category: String, unit: String) -> Double {
+        let itemName = name.lowercased()
+        let itemCategory = category.lowercased()
+        let itemUnit = unit.lowercased()
+        
+        // Weight-based items (grams/kg) - typical serving sizes
+        if itemUnit == "g" || itemUnit == "kg" {
+            if itemName.contains("meat") || itemName.contains("chicken") || itemName.contains("beef") || 
+               itemName.contains("pork") || itemName.contains("fish") || itemName.contains("salmon") ||
+               itemName.contains("tuna") || itemName.contains("shrimp") || itemName.contains("lamb") ||
+               itemName.contains("turkey") || itemName.contains("ham") || itemName.contains("bacon") ||
+               itemName.contains("sausage") {
+                return 250.0 // ~8.8 oz serving
+            }
+            else if itemName.contains("cheese") || itemName.contains("butter") {
+                return 100.0 // ~3.5 oz serving
+            }
+            else if itemName.contains("flour") || itemName.contains("sugar") || itemName.contains("rice") ||
+                    itemName.contains("pasta") || itemName.contains("nuts") || itemName.contains("seeds") {
+                return 150.0 // ~5.3 oz serving
+            }
+            else if itemName.contains("coffee") || itemName.contains("tea") || itemName.contains("spices") ||
+                    itemName.contains("herbs") || itemName.contains("salt") || itemName.contains("pepper") {
+                return 50.0 // ~1.8 oz serving
+            }
+            else {
+                return 100.0 // Default weight serving
+            }
+        }
+        
+        // Large weight items (kg) - whole items
+        else if itemUnit == "kg" {
+            if itemName.contains("watermelon") || itemName.contains("pumpkin") {
+                return 2.0 // ~4.4 lbs
+            }
+            else if itemName.contains("cabbage") || itemName.contains("large") || itemName.contains("whole") {
+                return 1.0 // ~2.2 lbs
+            }
+            else {
+                return 1.0 // Default kg serving
+            }
+        }
+        
+        // Liquid items (bottles) - typical bottle sizes
+        else if itemUnit == "bottles" {
+            if itemName.contains("milk") || itemName.contains("juice") || itemName.contains("soda") ||
+               itemName.contains("water") {
+                return 1.0 // 1 bottle
+            }
+            else if itemName.contains("oil") || itemName.contains("vinegar") || itemName.contains("sauce") ||
+                    itemName.contains("dressing") || itemName.contains("syrup") || itemName.contains("honey") {
+                return 1.0 // 1 bottle
+            }
+            else if itemName.contains("wine") || itemName.contains("beer") {
+                return 1.0 // 1 bottle/can
+            }
+            else if itemName.contains("soup") || itemName.contains("broth") {
+                return 1.0 // 1 can/carton
+            }
+            else {
+                return 1.0 // Default bottle serving
+            }
+        }
+        
+        // Packaged items (packs) - typical package sizes
+        else if itemUnit == "packs" {
+            if itemName.contains("yogurt") || itemName.contains("cream") || itemName.contains("sour cream") ||
+               itemName.contains("cottage") || itemName.contains("eggs") {
+                return 1.0 // 1 pack/carton
+            }
+            else if itemName.contains("tofu") || itemName.contains("tempeh") {
+                return 1.0 // 1 package
+            }
+            else {
+                return 1.0 // Default pack serving
+            }
+        }
+        
+        // Canned items (cans) - typical can sizes
+        else if itemUnit == "cans" {
+            if itemName.contains("canned") || itemName.contains("beans") || itemName.contains("corn") ||
+               itemName.contains("tomatoes") || itemName.contains("soup") || itemName.contains("tuna") ||
+               itemName.contains("sardines") || itemName.contains("olives") || itemName.contains("pickles") {
+                return 1.0 // 1 can
+            }
+            else {
+                return 1.0 // Default can serving
+            }
+        }
+        
+        // Packaged/pre-packaged items (packs) - typical package sizes
+        else if itemUnit == "packs" {
+            if itemName.contains("bread") || itemName.contains("bagels") || itemName.contains("muffins") {
+                return 1.0 // 1 loaf/pack
+            }
+            else if itemName.contains("crackers") || itemName.contains("cookies") || itemName.contains("chips") {
+                return 1.0 // 1 pack
+            }
+            else if itemName.contains("cereal") || itemName.contains("granola") || itemName.contains("bars") {
+                return 1.0 // 1 box/pack
+            }
+            else if itemName.contains("frozen") || itemName.contains("pizza") || itemName.contains("dumplings") {
+                return 1.0 // 1 package
+            }
+            else if itemName.contains("wraps") || itemName.contains("tortillas") || itemName.contains("pita") {
+                return 1.0 // 1 pack
+            }
+            else if itemName.contains("spinach") || itemName.contains("lettuce") || itemName.contains("arugula") ||
+                    itemName.contains("kale") || itemName.contains("herbs") || itemName.contains("mushrooms") {
+                return 1.0 // 1 package
+            }
+            else {
+                return 1.0 // Default pack serving
+            }
+        }
+        
+        // Individual items (pieces) - typical serving sizes
+        else if itemUnit == "pieces" {
+            if itemName.contains("apple") || itemName.contains("banana") || itemName.contains("orange") ||
+               itemName.contains("lemon") || itemName.contains("lime") || itemName.contains("peach") ||
+               itemName.contains("pear") || itemName.contains("plum") || itemName.contains("avocado") {
+                return 1.0 // 1 piece
+            }
+            else if itemName.contains("onion") || itemName.contains("garlic") || itemName.contains("potato") ||
+                    itemName.contains("sweet potato") || itemName.contains("carrot") || itemName.contains("celery") ||
+                    itemName.contains("cucumber") || itemName.contains("pepper") || itemName.contains("tomato") {
+                return 1.0 // 1 piece
+            }
+            else if itemName.contains("broccoli") || itemName.contains("cauliflower") || itemName.contains("cabbage") ||
+                    itemName.contains("eggplant") || itemName.contains("zucchini") || itemName.contains("squash") {
+                return 1.0 // 1 piece
+            }
+            else if itemName.contains("corn") || itemName.contains("asparagus") {
+                return 1.0 // 1 ear/bunch
+            }
+            else if itemName.contains("mango") || itemName.contains("pineapple") || itemName.contains("kiwi") {
+                return 1.0 // 1 piece
+            }
+            else if itemName.contains("grape") || itemName.contains("strawberry") || itemName.contains("blueberry") ||
+                    itemName.contains("cherry") {
+                return 1.0 // 1 piece (or small handful)
+            }
+            else {
+                return 1.0 // Default piece serving
+            }
+        }
+        
+        // Category-based fallbacks
+        else if itemCategory.contains("meat") || itemCategory.contains("dairy") {
+            return 1.0 // Default to 1 serving
+        }
+        else if itemCategory.contains("beverages") {
+            return 1.0 // 1 bottle/can
+        }
+        else if itemCategory.contains("fruits") || itemCategory.contains("vegetables") {
+            return 1.0 // 1 piece
+        }
+        else if itemCategory.contains("pantry") {
+            return 1.0 // 1 package
+        }
+        
+        // Default fallback
+        else {
+            return 1.0 // Default to 1
         }
     }
     
