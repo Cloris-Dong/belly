@@ -163,13 +163,13 @@ final class OpenAIService: ObservableObject {
         
         // Sort recipes by expiring ingredient usage
         let sortedRecipes = filteredRecipes.sorted { recipe1, recipe2 in
-            let expiring1 = (recipe1.usedIngredients ?? []).filter { ingredient in
+            let expiring1 = recipe1.usedIngredients.filter { ingredient in
                 cleanExpiring.contains { expiringIngredient in
                     ingredient.lowercased().contains(expiringIngredient) || expiringIngredient.contains(ingredient.lowercased())
                 }
             }.count
             
-            let expiring2 = (recipe2.usedIngredients ?? []).filter { ingredient in
+            let expiring2 = recipe2.usedIngredients.filter { ingredient in
                 cleanExpiring.contains { expiringIngredient in
                     ingredient.lowercased().contains(expiringIngredient) || expiringIngredient.contains(ingredient.lowercased())
                 }
@@ -180,7 +180,7 @@ final class OpenAIService: ObservableObject {
         
         // Select recipes to ensure all expiring items are covered
         for recipe in sortedRecipes {
-            let recipeExpiringItems = (recipe.usedIngredients ?? []).filter { ingredient in
+            let recipeExpiringItems = recipe.usedIngredients.filter { ingredient in
                 cleanExpiring.contains { expiringIngredient in
                     ingredient.lowercased().contains(expiringIngredient) || expiringIngredient.contains(ingredient.lowercased())
                 }
@@ -207,7 +207,7 @@ final class OpenAIService: ObservableObject {
                     continue // Skip already selected recipes
                 }
                 
-                let recipeExpiringItems = (recipe.usedIngredients ?? []).filter { ingredient in
+                let recipeExpiringItems = recipe.usedIngredients.filter { ingredient in
                     cleanExpiring.contains { expiringIngredient in
                         ingredient.lowercased().contains(expiringIngredient) || expiringIngredient.contains(ingredient.lowercased())
                     }
@@ -481,7 +481,7 @@ final class OpenAIService: ObservableObject {
                 throw OpenAIError.invalidResponse
             }
             
-            let items: [DetectedFood] = try detectedItems.compactMap { item in
+            let items: [DetectedFood] = detectedItems.compactMap { item in
                 guard let name = item["name"] as? String,
                       let category = item["category"] as? String,
                       let shelfLifeDays = item["shelfLifeDays"] as? Int,
@@ -527,7 +527,7 @@ final class OpenAIService: ObservableObject {
             
             print("🔍 Found \(recipes.count) recipes in response")
             
-             let parsedRecipes: [Recipe] = try recipes.enumerated().compactMap { (index, recipe) in
+             let parsedRecipes: [Recipe] = recipes.enumerated().compactMap { (index, recipe) in
                 print("🔍 Parsing recipe \(index + 1): \(recipe.keys.joined(separator: ", "))")
                 
                 guard let name = recipe["name"] as? String,
