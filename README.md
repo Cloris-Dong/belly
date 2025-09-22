@@ -1,4 +1,4 @@
-# Belly – Fridge Management App for iOS
+# Belly (Fridge Management App for iOS)
 **Belly** is a lightweight iOS app for managing fridge inventory. It helps users track expiration dates, organize items by shelf or category, and generate recipe ideas based on what's available. Designed for offline use and minimal interaction, the app allows users to quickly scan their fridge, monitor expiring items, and reduce food waste without manual logging.
 
 This project was developed independently, from initial concept to deployment. I handled product design, UI/UX, development in Xcode (SwiftUI), and user testing to refine usability and layout.
