@@ -28,7 +28,7 @@ The app is organized into three main modules:
 - **Smart Suggestions** – Recommendations for items to restock
 
 ## Demo Video
-[![Belly App Demo](https://drive.google.com/file/d/1gyu1TDOLIczt3y6vsfPyE4F5nO0ShFXm/view?usp=sharing)](https://drive.google.com/file/d/1gyu1TDOLIczt3y6vsfPyE4F5nO0ShFXm/view?usp=sharing)
+[Belly App Demo](https://drive.google.com/file/d/1gyu1TDOLIczt3y6vsfPyE4F5nO0ShFXm/view?usp=sharing)
 
 ## My Role
 I led the end-to-end development of Belly as a solo contributor, covering:
